@@ -11,7 +11,7 @@ environments:
   meta:
     id: env_82094b5b696655da532214cd1b6ca31215ea29b7
     created: 1778268301614
-    modified: 1778269176440
+    modified: 1778273235411
     isPrivate: false
   data:
-    base_url: dev.insomnia.air
+    base_url: http://localhost:8000
