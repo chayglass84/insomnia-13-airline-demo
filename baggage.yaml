@@ -25,6 +25,15 @@ collection:
           description: Returns the current state of a bag.
           sortKey: -1778268657029
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has bagTag field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('bagTag');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -60,6 +69,15 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has bagTag field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('bagTag');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -92,6 +110,15 @@ collection:
           - name: limit
             value: "50"
             disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -112,6 +139,15 @@ collection:
             ground crew to reconcile what should be loaded.
           sortKey: -1778268657030
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -151,6 +187,15 @@ collection:
           description: Returns all bags currently associated with a booking.
           sortKey: -1778268657030
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -184,6 +229,11 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -210,6 +260,15 @@ collection:
           description: Returns the chronological history of scans recorded against a bag.
           sortKey: -1778268657030
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -244,6 +303,15 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has type field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('type');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -284,6 +352,11 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -302,6 +375,15 @@ collection:
           description: Returns the current state of a lost-baggage case.
           sortKey: -1778268657031
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has caseId field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('caseId');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -339,6 +421,15 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has caseId field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('caseId');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -382,6 +473,15 @@ collection:
           - name: pnr
             value: string
             disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true

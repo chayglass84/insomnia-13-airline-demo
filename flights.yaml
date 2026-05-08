@@ -215,6 +215,15 @@ collection:
           - name: limit
             value: "50"
             disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -250,6 +259,15 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has flightNumber field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('flightNumber');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -269,6 +287,15 @@ collection:
             on the given departure date.
           sortKey: -1778267676048
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has flightNumber field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('flightNumber');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -307,6 +334,11 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -366,6 +398,15 @@ collection:
           - name: destination
             value: string
             disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -397,6 +438,16 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has origin and destination', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('origin');
+              insomnia.expect(body).to.have.property('destination');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -434,6 +485,15 @@ collection:
           description: Returns details for a single published route.
           sortKey: -1778267676048
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has id field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('id');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true

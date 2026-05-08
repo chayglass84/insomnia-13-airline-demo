@@ -58,6 +58,15 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has pnr field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('pnr');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -76,6 +85,15 @@ collection:
           description: Returns a single booking, including its passengers and segments.
           sortKey: -1778268647501
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has pnr field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('pnr');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -108,6 +126,15 @@ collection:
           - name: limit
             value: "50"
             disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -141,6 +168,11 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -204,6 +236,15 @@ collection:
           description: Returns all seat assignments on this booking, across all segments.
           sortKey: -1778268647503
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -237,6 +278,15 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has seatNumber field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('seatNumber');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -266,6 +316,11 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -292,6 +347,15 @@ collection:
           description: Returns the passengers currently attached to a booking.
           sortKey: -1778268647502
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -325,6 +389,15 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has id field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('id');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -343,6 +416,15 @@ collection:
           description: Returns details for a single passenger on a booking.
           sortKey: -1778268647502
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has id field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('id');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -380,6 +462,15 @@ collection:
             one booking).
           sortKey: -1778268647503
         method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has frequentFlyerId field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('frequentFlyerId');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -402,6 +493,15 @@ collection:
           - name: status
             value: string
             disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
         settings:
           renderRequestBody: true
           encodeUrl: true
