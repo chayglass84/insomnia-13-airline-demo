@@ -396,7 +396,7 @@ collection:
         meta:
           id: req_764395347d804acf8ea4ab4ee60c067e
           created: 1778267676048
-          modified: 1778267676048
+          modified: 1778268733363
           isPrivate: false
           description: Returns details for a single published route.
           sortKey: -1778267676048
@@ -552,33 +552,8 @@ environments:
   meta:
     id: env_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774013
-    modified: 1778267676043
+    modified: 1778269107985
     isPrivate: false
-  data:
-    base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
-  subEnvironments:
-    - name: OpenAPI env api.staging.insomnia-airlines.example
-      meta:
-        id: env_08f73a10493d41759d46c776524ca6e4
-        created: 1778267676044
-        modified: 1778267676044
-        isPrivate: false
-        sortKey: 1778267676044
-      data:
-        scheme: https
-        base_path: /v1
-        host: api.staging.insomnia-airlines.example
-    - name: OpenAPI env api.insomnia-airlines.example
-      meta:
-        id: env_56637b09439e471d83814a55744381ae
-        created: 1778267676044
-        modified: 1778267676044
-        isPrivate: false
-        sortKey: 1778267676044
-      data:
-        scheme: https
-        base_path: /v1
-        host: api.insomnia-airlines.example
 spec:
   contents:
     openapi: 3.0.4

@@ -223,7 +223,7 @@ collection:
         meta:
           id: req_525b0ea6d4a8477a985a12cf2ce11e8b
           created: 1778268657030
-          modified: 1778268657030
+          modified: 1778269033139
           isPrivate: false
           description: |-
             Records a new tracking event for a bag. The bag's current status and
@@ -401,33 +401,8 @@ environments:
   meta:
     id: env_f22f18ed9d7f5d2eecf16b38e781a39a07faeb00
     created: 1778268014676
-    modified: 1778268657027
+    modified: 1778269026284
     isPrivate: false
-  data:
-    base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
-  subEnvironments:
-    - name: OpenAPI env api.insomnia-airlines.example
-      meta:
-        id: env_8da73a34a4b94e1caf49abbf83ad483d
-        created: 1778268657028
-        modified: 1778268657028
-        isPrivate: false
-        sortKey: 1778268657028
-      data:
-        scheme: https
-        base_path: /v1
-        host: api.insomnia-airlines.example
-    - name: OpenAPI env api.staging.insomnia-airlines.example
-      meta:
-        id: env_eb60e7491143491697e13286781a793c
-        created: 1778268657028
-        modified: 1778268657028
-        isPrivate: false
-        sortKey: 1778268657028
-      data:
-        scheme: https
-        base_path: /v1
-        host: api.staging.insomnia-airlines.example
 spec:
   contents:
     openapi: 3.0.4

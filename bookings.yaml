@@ -356,7 +356,7 @@ collection:
         meta:
           id: req_f060f89c7e07438593d49e59eee8307d
           created: 1778268647502
-          modified: 1778268647502
+          modified: 1778269075934
           isPrivate: false
           description: Removes a passenger and any seat assignments held by that passenger.
           sortKey: -1778268647502
@@ -421,33 +421,8 @@ environments:
   meta:
     id: env_834ec44a17c6e993775ec531d73b3df208b2cebd
     created: 1778268038799
-    modified: 1778268647499
+    modified: 1778269046567
     isPrivate: false
-  data:
-    base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
-  subEnvironments:
-    - name: OpenAPI env api.insomnia-airlines.example
-      meta:
-        id: env_4530ea27c1b54068ac8677e753681106
-        created: 1778268647499
-        modified: 1778268647499
-        isPrivate: false
-        sortKey: 1778268647499
-      data:
-        scheme: https
-        base_path: /v1
-        host: api.insomnia-airlines.example
-    - name: OpenAPI env api.staging.insomnia-airlines.example
-      meta:
-        id: env_aa47610092494660b251bffa8ecef380
-        created: 1778268647500
-        modified: 1778268647500
-        isPrivate: false
-        sortKey: 1778268647500
-      data:
-        scheme: https
-        base_path: /v1
-        host: api.staging.insomnia-airlines.example
 spec:
   contents:
     openapi: 3.0.4
