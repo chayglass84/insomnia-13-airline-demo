@@ -409,138 +409,6 @@ collection:
             send: true
             store: true
           rebuildPath: true
-  - name: aircraft
-    meta:
-      id: fld_e7761432894e467eb8e51a944168e563
-      created: 1778267676045
-      modified: 1778267676045
-      sortKey: -1778267676045
-      description: The Insomnia Airlines fleet (A320 and 787 airframes).
-    children:
-      - url: "{{ _.base_url }}/aircraft"
-        name: List aircraft.
-        meta:
-          id: req_a87fcee900df4d33ab4de6cb16082daa
-          created: 1778267676046
-          modified: 1778267676046
-          isPrivate: false
-          description: Returns the Insomnia Airlines fleet, optionally filtered by
-            aircraft type or operational status.
-          sortKey: -1778267676046
-        method: GET
-        parameters:
-          - name: type
-            value: string
-            disabled: true
-          - name: status
-            value: string
-            disabled: true
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-      - url: "{{ _.base_url }}/aircraft/:tailNumber"
-        name: Get aircraft by tail number.
-        meta:
-          id: req_1f64354cd0ea4a419c62a2fd2cc254f9
-          created: 1778267676047
-          modified: 1778267676047
-          isPrivate: false
-          description: Returns details for a single aircraft.
-          sortKey: -1778267676047
-        method: GET
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-      - url: "{{ _.base_url }}/aircraft"
-        name: Register an aircraft.
-        meta:
-          id: req_2b993e9d7872414f806a2fca57cf1921
-          created: 1778267676047
-          modified: 1778267676047
-          isPrivate: false
-          description: Adds a new airframe to the Insomnia Airlines fleet.
-          sortKey: -1778267676047
-        method: POST
-        body:
-          mimeType: application/json
-          text: |-
-            {
-              "tailNumber": "C-GZZZ",
-              "type": "string",
-              "seatCapacity": 290,
-              "yearOfManufacture": 2022
-            }
-        headers:
-          - name: Content-Type
-            value: application/json
-            disabled: false
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-      - url: "{{ _.base_url }}/aircraft/:tailNumber"
-        name: Retire an aircraft.
-        meta:
-          id: req_69d4421ad2fb4cf7a63ccca67a118c50
-          created: 1778267676047
-          modified: 1778267676047
-          isPrivate: false
-          description: Removes an aircraft from the fleet. Fails if any future flights are
-            still assigned to it.
-          sortKey: -1778267676047
-        method: DELETE
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-      - url: "{{ _.base_url }}/aircraft/:tailNumber"
-        name: Update aircraft fields.
-        meta:
-          id: req_b32d89d9dbe44a9fac669bcd0d1c3aa7
-          created: 1778267676047
-          modified: 1778267676047
-          isPrivate: false
-          description: Partially updates an aircraft — typically used to change
-            operational status or seat configuration.
-          sortKey: -1778267676047
-        method: PATCH
-        body:
-          mimeType: application/json
-          text: |-
-            {
-              "seatCapacity": 0,
-              "status": "string"
-            }
-        headers:
-          - name: Content-Type
-            value: application/json
-            disabled: false
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
@@ -559,32 +427,21 @@ spec:
     openapi: 3.0.4
     info:
       title: Insomnia Airlines — Flights & Airports API
-      description: >-
+      description: |-
         REST API for **Insomnia Airlines**, covering the airline's airport
-        network,
-
-        fleet, published routes, and scheduled flight instances.
-
+        network, published routes, and scheduled flight instances.
 
         Insomnia Airlines operates two aircraft types — the **Airbus A320**
-        (narrow-body)
+        (narrow-body) and **Boeing 787** (wide-body) — and serves 10 major
+        North American airports: YYZ, YUL, YVR, SEA, SFO, ORD, IAH, IAD, BOS,
+        and FLL. The network has reasonable but not total connectivity, so not
+        every origin–destination pair is served; the served city-pairs are
+        exposed via the `/routes` resource.
 
-        and **Boeing 787** (wide-body) — and serves 10 major North American
-        airports:
-
-        YYZ, YUL, YVR, SEA, SFO, ORD, IAH, IAD, BOS, and FLL. The network has
-        reasonable
-
-        but not total connectivity, so not every origin–destination pair is
-        served; the
-
-        served city-pairs are exposed via the `/routes` resource.
-
-
-        This spec is one of three Insomnia Airlines design documents. Bookings
-        and
-
-        baggage live in their own specs and are out of scope here.
+        The fleet (individual airframes, maintenance state, etc.) is managed by
+        the Operations team and is **not** in scope for this API — see the
+        Operations collection. Bookings and baggage also live in their own
+        specs.
       version: 1.0.0
       contact:
         name: Insomnia Airlines API Team
@@ -600,8 +457,6 @@ spec:
     tags:
       - name: airports
         description: Airports served by Insomnia Airlines.
-      - name: aircraft
-        description: The Insomnia Airlines fleet (A320 and 787 airframes).
       - name: routes
         description: Published city-pairs the airline operates between.
       - name: flights
@@ -755,153 +610,6 @@ spec:
               description: Airport not found.
             "409":
               description: Airport is referenced by one or more active routes.
-            default:
-              description: Unexpected error.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Error"
-      /aircraft:
-        get:
-          tags:
-            - aircraft
-          summary: List aircraft.
-          description: Returns the Insomnia Airlines fleet, optionally filtered by
-            aircraft type or operational status.
-          operationId: listAircraft
-          parameters:
-            - name: type
-              in: query
-              description: Filter by aircraft type.
-              required: false
-              schema:
-                $ref: "#/components/schemas/AircraftType"
-            - name: status
-              in: query
-              description: Filter by operational status.
-              required: false
-              schema:
-                $ref: "#/components/schemas/AircraftStatus"
-          responses:
-            "200":
-              description: Successful operation.
-              content:
-                application/json:
-                  schema:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Aircraft"
-            default:
-              description: Unexpected error.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Error"
-        post:
-          tags:
-            - aircraft
-          summary: Register an aircraft.
-          description: Adds a new airframe to the Insomnia Airlines fleet.
-          operationId: createAircraft
-          requestBody:
-            description: Aircraft to register.
-            required: true
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/AircraftInput"
-          responses:
-            "201":
-              description: Aircraft registered.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Aircraft"
-            "400":
-              description: Invalid aircraft payload.
-            "409":
-              description: An aircraft with that tail number already exists.
-            default:
-              description: Unexpected error.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Error"
-      /aircraft/{tailNumber}:
-        parameters:
-          - name: tailNumber
-            in: path
-            description: Aircraft registration / tail number (e.g. `C-FINS`).
-            required: true
-            schema:
-              type: string
-              pattern: ^[A-Z0-9-]{3,10}$
-        get:
-          tags:
-            - aircraft
-          summary: Get aircraft by tail number.
-          description: Returns details for a single aircraft.
-          operationId: getAircraftByTail
-          responses:
-            "200":
-              description: Successful operation.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Aircraft"
-            "404":
-              description: Aircraft not found.
-            default:
-              description: Unexpected error.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Error"
-        patch:
-          tags:
-            - aircraft
-          summary: Update aircraft fields.
-          description: Partially updates an aircraft — typically used to change
-            operational status or seat configuration.
-          operationId: patchAircraft
-          requestBody:
-            description: Fields to update.
-            required: true
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/AircraftPatch"
-          responses:
-            "200":
-              description: Aircraft updated.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Aircraft"
-            "400":
-              description: Invalid patch payload.
-            "404":
-              description: Aircraft not found.
-            default:
-              description: Unexpected error.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/Error"
-        delete:
-          tags:
-            - aircraft
-          summary: Retire an aircraft.
-          description: Removes an aircraft from the fleet. Fails if any future flights are
-            still assigned to it.
-          operationId: retireAircraft
-          responses:
-            "204":
-              description: Aircraft retired.
-            "404":
-              description: Aircraft not found.
-            "409":
-              description: Aircraft has future flights assigned.
             default:
               description: Unexpected error.
               content:
@@ -1299,79 +1007,6 @@ spec:
             timezone:
               type: string
               example: America/Montreal
-        AircraftType:
-          type: string
-          description: Aircraft type operated by Insomnia Airlines.
-          enum:
-            - A320
-            - B787
-        AircraftStatus:
-          type: string
-          description: Operational status of an airframe.
-          enum:
-            - ACTIVE
-            - MAINTENANCE
-            - RETIRED
-        Aircraft:
-          type: object
-          required:
-            - tailNumber
-            - type
-            - seatCapacity
-            - status
-          properties:
-            tailNumber:
-              type: string
-              description: Aircraft registration / tail number.
-              example: C-FINS
-            type:
-              $ref: "#/components/schemas/AircraftType"
-            seatCapacity:
-              type: integer
-              format: int32
-              description: Total installed seats.
-              minimum: 1
-              example: 180
-            status:
-              $ref: "#/components/schemas/AircraftStatus"
-            yearOfManufacture:
-              type: integer
-              format: int32
-              minimum: 1950
-              example: 2019
-        AircraftInput:
-          type: object
-          required:
-            - tailNumber
-            - type
-            - seatCapacity
-          properties:
-            tailNumber:
-              type: string
-              example: C-GZZZ
-            type:
-              $ref: "#/components/schemas/AircraftType"
-            seatCapacity:
-              type: integer
-              format: int32
-              minimum: 1
-              example: 290
-            yearOfManufacture:
-              type: integer
-              format: int32
-              minimum: 1950
-              example: 2022
-        AircraftPatch:
-          type: object
-          description: Partial update payload for an aircraft. Any field omitted is left
-            unchanged.
-          properties:
-            seatCapacity:
-              type: integer
-              format: int32
-              minimum: 1
-            status:
-              $ref: "#/components/schemas/AircraftStatus"
         Route:
           type: object
           required:
@@ -1477,7 +1112,8 @@ spec:
               description: Route this flight operates.
             aircraftTailNumber:
               type: string
-              description: Tail number of the aircraft assigned to this flight.
+              description: Tail number of the aircraft assigned to this flight. The airframe
+                itself is managed by the Operations API.
               example: C-FINS
             scheduledDeparture:
               type: string
