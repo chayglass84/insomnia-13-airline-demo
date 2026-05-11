@@ -11,7 +11,7 @@ collection:
     meta:
       id: fld_0e5467398ea849d1af43767632f55ddc
       created: 1778267676045
-      modified: 1778267676045
+      modified: 1778273505588
       sortKey: -1778267676045
       description: Airports served by Insomnia Airlines.
     children:
@@ -20,7 +20,7 @@ collection:
         meta:
           id: req_ec678ccaa5b34b47a2ef5128ee88e845
           created: 1778267676045
-          modified: 1778267676045
+          modified: 1778273484219
           isPrivate: false
           description: Returns the airports served by Insomnia Airlines, optionally
             filtered by country.
@@ -31,8 +31,8 @@ collection:
             value: string
             disabled: true
           - name: limit
-            value: "50"
-            disabled: true
+            value: "2"
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -370,7 +370,7 @@ collection:
     meta:
       id: fld_78432cf4c48f413383f228efc660c5cc
       created: 1778267676045
-      modified: 1778267676045
+      modified: 1778513252317
       sortKey: -1778267676045
       description: Published city-pairs the airline operates between.
     children:
@@ -507,13 +507,13 @@ cookieJar:
   meta:
     id: jar_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774014
-    modified: 1778266774014
+    modified: 1778513252316
 environments:
   name: Base Environment
   meta:
     id: env_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774013
-    modified: 1778269107985
+    modified: 1778513252317
     isPrivate: false
 spec:
   contents:
