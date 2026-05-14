@@ -1,10 +1,10 @@
 type: collection.insomnia.rest/5.0
 schema_version: "5.1"
-name: Imported Collection
+name: Imported from Try in Insomnia
 meta:
   id: wrk_23c61ab98f3646f09135c07aed8a8245
   created: 1778511433620
-  modified: 1778511433620
+  modified: 1778786300089
   description: ""
 collection:
   - url: http://localhost:8000/flights
@@ -16,31 +16,6 @@ collection:
       isPrivate: false
       description: ""
       sortKey: -1778511433621
-    method: GET
-    parameters:
-      - name: origin
-        value: YYZ
-        disabled: false
-    headers:
-      - name: User-Agent
-        value: insomnia/12.5.1-alpha.0
-    settings:
-      renderRequestBody: true
-      encodeUrl: true
-      followRedirects: global
-      cookies:
-        send: true
-        store: true
-      rebuildPath: true
-  - url: http://localhost:8000/flights
-    name: http://localhost:8000/flights
-    meta:
-      id: req_f4fcd24322904ae089566b77c73bdc03
-      created: 1778511589743
-      modified: 1778511589743
-      isPrivate: false
-      description: ""
-      sortKey: -1778511589743
     method: GET
     parameters:
       - name: origin
