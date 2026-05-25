@@ -11,7 +11,8 @@ environments:
   meta:
     id: env_82094b5b696655da532214cd1b6ca31215ea29b7
     created: 1778268301614
-    modified: 1778273235411
+    modified: 1779736473478
     isPrivate: false
   data:
     base_url: http://localhost:8000
+    auth_token: f613a12b-1a96-4039-b1fb-3064a50fa2fd

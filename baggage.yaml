@@ -11,7 +11,7 @@ collection:
     meta:
       id: fld_4d05cf4384934426870c9ac6ef04cefa
       created: 1778268657028
-      modified: 1778268657028
+      modified: 1779736149621
       sortKey: -1778268657028
       description: Individual checked bags and their current status.
     children:
@@ -242,11 +242,42 @@ collection:
             send: true
             store: true
           rebuildPath: true
+      - name: Auth
+        meta:
+          id: fld_ee2823800d2745bd8d33dcf7cd156628
+          created: 1779736685573
+          modified: 1779736685573
+          sortKey: -1779736685573
+          description: ""
+        children:
+          - url: ""
+            name: New Request
+            meta:
+              id: req_5ba25ad947d6419fb339cbdea342f5ad
+              created: 1779736700597
+              modified: 1779736700597
+              isPrivate: false
+              description: ""
+              sortKey: -1779736700597
+            method: GET
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.1-alpha.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
   - name: tracking
     meta:
       id: fld_0471ae96e0b74b128793f9cd5e71b517
       created: 1778268657029
-      modified: 1778268657029
+      modified: 1779736469977
       sortKey: -1778268657029
       description: Bag tracking events (scans through check-in, load, transfer, claim).
     children:
@@ -255,11 +286,15 @@ collection:
         meta:
           id: req_2bc5f6eb97cb48c7adf5438383085ae5
           created: 1778268657030
-          modified: 1778268657030
+          modified: 1779737457029
           isPrivate: false
           description: Returns the chronological history of scans recorded against a bag.
           sortKey: -1778268657030
         method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -282,7 +317,7 @@ collection:
         meta:
           id: req_525b0ea6d4a8477a985a12cf2ce11e8b
           created: 1778268657030
-          modified: 1778269033139
+          modified: 1779737457029
           isPrivate: false
           description: |-
             Records a new tracking event for a bag. The bag's current status and
@@ -300,6 +335,9 @@ collection:
               "notes": "Transferred to inbound flight IA918."
             }
         headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
           - name: Content-Type
             value: application/json
             disabled: false
@@ -320,11 +358,19 @@ collection:
             send: true
             store: true
           rebuildPath: true
+    scripts:
+      preRequest: |-
+        const response = await insomnia.sendRequest({
+          url: insomnia.globals.get('base_url') + '/auth/token',
+          method: 'GET'
+        });
+        const body = response.json();
+        insomnia.globals.set('auth_token', body.token);
   - name: lost-baggage
     meta:
       id: fld_ae21d5ea6aee4c20ae02d1e1aa23b27f
       created: 1778268657029
-      modified: 1778268657029
+      modified: 1779736473478
       sortKey: -1778268657029
       description: Lost or mishandled baggage cases.
     children:
@@ -333,7 +379,7 @@ collection:
         meta:
           id: req_0ccb9e72633047b289f67aef5e5807f1
           created: 1778268657031
-          modified: 1778268657031
+          modified: 1779737457029
           isPrivate: false
           description: |-
             Partially updates a case — typically used to attach the bag tag once
@@ -349,6 +395,9 @@ collection:
               "notes": "string"
             }
         headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
           - name: Content-Type
             value: application/json
             disabled: false
@@ -370,11 +419,15 @@ collection:
         meta:
           id: req_20147dda0c8142cbb7a1b4d83e6fc5b3
           created: 1778268657031
-          modified: 1778268657031
+          modified: 1779737457029
           isPrivate: false
           description: Returns the current state of a lost-baggage case.
           sortKey: -1778268657031
         method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -397,7 +450,7 @@ collection:
         meta:
           id: req_a61ce6b6d9e544e68238c56df31fcf5f
           created: 1778268657031
-          modified: 1778268657031
+          modified: 1779737457029
           isPrivate: false
           description: >-
             Opens a new lost-baggage case for a passenger. The bag tag is
@@ -418,6 +471,9 @@ collection:
               "description": "Black hardshell roller, red ribbon on handle."
             }
         headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
           - name: Content-Type
             value: application/json
             disabled: false
@@ -443,11 +499,15 @@ collection:
         meta:
           id: req_ad968c219795417690d59ca2f19d6a56
           created: 1778268657031
-          modified: 1778268657031
+          modified: 1779737457029
           isPrivate: false
           description: Closes a case. Soft-deletes by setting status to `CLOSED`.
           sortKey: -1778268657031
         method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -461,7 +521,7 @@ collection:
         meta:
           id: req_af25932e51f84cfc9b0ac7ceb041bc44
           created: 1778268657031
-          modified: 1778268657031
+          modified: 1779736428650
           isPrivate: false
           description: Returns lost-baggage cases, optionally filtered by status or booking.
           sortKey: -1778268657031
@@ -473,6 +533,10 @@ collection:
           - name: pnr
             value: string
             disabled: true
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -490,18 +554,28 @@ collection:
             send: true
             store: true
           rebuildPath: true
+    scripts:
+      preRequest: |-
+        
+        const response = await insomnia.sendRequest({
+          url: insomnia.globals.get('base_url') + '/auth/token',
+          method: 'GET'
+        });
+
+        const body = response.json();
+        insomnia.globals.set('auth_token', body.token);
 cookieJar:
   name: Default Jar
   meta:
     id: jar_f22f18ed9d7f5d2eecf16b38e781a39a07faeb00
     created: 1778268014676
-    modified: 1778268014676
+    modified: 1779736473478
 environments:
   name: Base Environment
   meta:
     id: env_f22f18ed9d7f5d2eecf16b38e781a39a07faeb00
     created: 1778268014676
-    modified: 1778269026284
+    modified: 1779736473478
     isPrivate: false
 spec:
   contents:
@@ -533,10 +607,12 @@ spec:
         name: Apache 2.0
         url: https://www.apache.org/licenses/LICENSE-2.0.html
     servers:
-      - url: https://api.insomnia-airlines.example/v1
+      - url: https://2110842ae3.us.serverless.gateways.konggateway.com
+        description: Kong Gateway
+      - url: https://insomnia-airlines-api.onrender.com
         description: Production
-      - url: https://api.staging.insomnia-airlines.example/v1
-        description: Staging
+      - url: http://localhost:8000
+        description: Local dev
     tags:
       - name: bags
         description: Individual checked bags and their current status.
@@ -1317,7 +1393,13 @@ spec:
             message:
               type: string
               example: No bag with tag '0074123456' exists.
+      securitySchemes:
+        bearerAuth:
+          type: http
+          scheme: bearer
+          description: Token obtained from `GET /auth/token` (Security & Testing API).
+            Tokens are valid for 24 hours.
   meta:
     id: spc_a843f4922ef248898e4eea7acd4c11fa
     created: 1778268014675
-    modified: 1778268014675
+    modified: 1779737457029

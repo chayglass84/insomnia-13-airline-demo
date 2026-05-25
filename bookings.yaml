@@ -555,10 +555,12 @@ spec:
         name: Apache 2.0
         url: https://www.apache.org/licenses/LICENSE-2.0.html
     servers:
-      - url: https://api.insomnia-airlines.example/v1
+      - url: https://2110842ae3.us.serverless.gateways.konggateway.com
+        description: Kong Gateway
+      - url: https://insomnia-airlines-api.onrender.com
         description: Production
-      - url: https://api.staging.insomnia-airlines.example/v1
-        description: Staging
+      - url: http://localhost:8000
+        description: Local dev
     tags:
       - name: bookings
         description: Passenger reservations (PNRs).
