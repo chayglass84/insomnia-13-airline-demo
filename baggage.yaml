@@ -7,13 +7,43 @@ meta:
   modified: 1778268014674
   description: ""
 collection:
+  - url: http://127.0.0.1:5500/flights/IA204/bags
+    name: http://127.0.0.1:5500/flights/IA204/bags
+    meta:
+      id: req_270bce18b77545e9baa2dcaff501c2e3
+      created: 1779737212881
+      modified: 1779737212881
+      isPrivate: false
+      description: ""
+      sortKey: -1779737212881
+    method: GET
+    parameters:
+      - name: departureDate
+        value: 2026-05-25
+        disabled: false
+    headers:
+      - name: User-Agent
+        value: insomnia/12.5.1-alpha.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
   - name: bags
     meta:
       id: fld_4d05cf4384934426870c9ac6ef04cefa
       created: 1778268657028
-      modified: 1779736149621
+      modified: 1779737487511
       sortKey: -1778268657028
-      description: Individual checked bags and their current status.
+      description: |-
+        # Weird Auth Examples
+        ## GET /bags
+        Bearer token in the auth tab
+
+        ##
     children:
       - url: "{{ _.base_url }}/bags/:bagTag"
         name: Get bag by tag.
@@ -87,11 +117,11 @@ collection:
             store: true
           rebuildPath: true
       - url: "{{ _.base_url }}/bags"
-        name: List bags.
+        name: List bags (auth tab)
         meta:
           id: req_ffc01c058f6846c1933d675e45b28f7b
           created: 1778268657029
-          modified: 1778268657029
+          modified: 1779737564542
           isPrivate: false
           description: Returns bags, optionally filtered by status, booking, flight, or
             passenger.
@@ -110,6 +140,10 @@ collection:
           - name: limit
             value: "50"
             disabled: true
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_5ba25ad947d6419fb339cbdea342f5ad',
+            'b64::JC50b2tlbg==::46b', 'always', 60 %}"
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -127,19 +161,44 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ _.base_url }}/flights/:flightNumber/bags"
-        name: List bags on a flight.
+      - url: "{{ _.base_url }}/flights/{{ _.flight_number }}/bags"
+        name: List bags on a flight (template tag)
         meta:
           id: req_1f87e9944aba48e992399baa002e346e
           created: 1778268657030
-          modified: 1778268657030
+          modified: 1779737551878
           isPrivate: false
           description: |-
             Returns bags currently assigned to a given flight instance. Used by
             ground crew to reconcile what should be loaded.
           sortKey: -1778268657030
         method: GET
+        parameters:
+          - name: departureDate
+            value: "{{ _.departure_date }}"
+            description: ""
+            disabled: false
+        headers:
+          - name: Authorization
+            value: Bearer {% response 'body', 'req_5ba25ad947d6419fb339cbdea342f5ad',
+              'b64::JC50b2tlbg==::46b', 'always', 60 %}
+            description: ""
+            disabled: false
         scripts:
+          preRequest: >-
+            if (!insomnia.globals.get('flight_number')) {
+              const response = await insomnia.sendRequest({
+                url: insomnia.globals.get('base_url') + '/bookings',
+                method: 'GET'
+              });
+              const bookings = response.json();
+              const booking = bookings.find(b => b.segments && b.segments.length > 0);
+              if (booking) {
+                const segment = booking.segments[0];
+                insomnia.globals.set('flight_number', segment.flightNumber);
+                insomnia.globals.set('departure_date', segment.departureDate);
+              }
+            }
           afterResponse: |-
             insomnia.test('Status is 200', () => {
               insomnia.expect(insomnia.response.status).to.eql(200);
@@ -178,16 +237,27 @@ collection:
             store: true
           rebuildPath: true
       - url: "{{ _.base_url }}/bookings/:pnr/bags"
-        name: List bags on a booking.
+        name: List bags on a booking (script auth)
         meta:
           id: req_ae5d71a2dc814140b9c982dc4f75a9ba
           created: 1778268657030
-          modified: 1778268657030
+          modified: 1779737530044
           isPrivate: false
           description: Returns all bags currently associated with a booking.
           sortKey: -1778268657030
         method: GET
         scripts:
+          preRequest: >+
+            const response = await insomnia.sendRequest({
+              url: insomnia.globals.get('base_url') + '/auth/token',
+              method: 'GET'
+            });
+
+            const body = response.json();
+
+            insomnia.request.addHeader({key: 'Authorization', value: 'Bearer ' +
+            body.token });
+
           afterResponse: |-
             insomnia.test('Status is 200', () => {
               insomnia.expect(insomnia.response.status).to.eql(200);
@@ -242,20 +312,20 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - name: Auth
+      - name: auth
         meta:
           id: fld_ee2823800d2745bd8d33dcf7cd156628
           created: 1779736685573
-          modified: 1779736685573
+          modified: 1779736748415
           sortKey: -1779736685573
           description: ""
         children:
-          - url: ""
-            name: New Request
+          - url: "{{ _.base_url }}/auth/token"
+            name: Get Auth Token
             meta:
               id: req_5ba25ad947d6419fb339cbdea342f5ad
               created: 1779736700597
-              modified: 1779736700597
+              modified: 1779736775168
               isPrivate: false
               description: ""
               sortKey: -1779736700597
@@ -569,13 +639,13 @@ cookieJar:
   meta:
     id: jar_f22f18ed9d7f5d2eecf16b38e781a39a07faeb00
     created: 1778268014676
-    modified: 1779736473478
+    modified: 1779737487451
 environments:
   name: Base Environment
   meta:
     id: env_f22f18ed9d7f5d2eecf16b38e781a39a07faeb00
     created: 1778268014676
-    modified: 1779736473478
+    modified: 1779737487507
     isPrivate: false
 spec:
   contents:
