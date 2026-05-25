@@ -7,43 +7,170 @@ meta:
   modified: 1778268014674
   description: ""
 collection:
-  - url: http://127.0.0.1:5500/flights/IA204/bags
-    name: http://127.0.0.1:5500/flights/IA204/bags
-    meta:
-      id: req_270bce18b77545e9baa2dcaff501c2e3
-      created: 1779737212881
-      modified: 1779737212881
-      isPrivate: false
-      description: ""
-      sortKey: -1779737212881
-    method: GET
-    parameters:
-      - name: departureDate
-        value: 2026-05-25
-        disabled: false
-    headers:
-      - name: User-Agent
-        value: insomnia/12.5.1-alpha.0
-    settings:
-      renderRequestBody: true
-      encodeUrl: true
-      followRedirects: global
-      cookies:
-        send: true
-        store: true
-      rebuildPath: true
   - name: bags
     meta:
       id: fld_4d05cf4384934426870c9ac6ef04cefa
       created: 1778268657028
       modified: 1779737487511
       sortKey: -1778268657028
-      description: |-
+      description: >-
         # Weird Auth Examples
-        ## GET /bags
-        Bearer token in the auth tab
 
-        ##
+
+        This folder demonstrates **three ways to attach a bearer token** in
+        Insomnia. All three pull from the same source.
+
+
+        ## Auth token endpoint
+
+
+        `GET /auth/token` lives in the **auth** sub-folder at the bottom of this
+        folder. No credentials required — it returns a token valid for 24 hours:
+
+
+        ```json
+
+        { "token": "...", "issuedAt": "...", "expiresIn": 86400 }
+
+        ```
+
+
+        Send it once to prime the response cache, then all three examples below
+        use it automatically via request chaining.
+
+
+        ---
+
+
+        ## 1. Auth tab — `GET /bags`
+
+
+        The token is configured in the **Auth tab** (type: Bearer). The value is
+        a **Response template tag** — a built-in Insomnia feature that chains
+        the result of one request into a field of another:
+
+
+        ```
+
+        {% response 'body', '<req-id>', 'b64::JC50b2tlbg==::46b', 'always', 60
+        %}
+
+        ```
+
+
+        `b64::JC50b2tlbg==::46b` is a base64-encoded JSONPath that decodes to
+        `$.token`. `'always'` tells Insomnia to re-send the chained request if
+        the cached result is older than `60` seconds. Insomnia injects
+        `Authorization: Bearer <token>` automatically — no script involved.
+
+
+        **When to use:** Simplest option. Auth is visible in the UI, not buried
+        in a script. Best for shared collections where transparency matters.
+
+
+        ---
+
+
+        ## 2. Pre-request script — `GET /bookings/:pnr/bags`
+
+
+        A pre-request script fetches the token at send time and injects it as a
+        header programmatically:
+
+
+        ```js
+
+        const response = await insomnia.sendRequest({
+          url: insomnia.globals.get('base_url') + '/auth/token',
+          method: 'GET'
+        });
+
+        const body = response.json();
+
+        insomnia.request.addHeader({ key: 'Authorization', value: 'Bearer ' +
+        body.token });
+
+        ```
+
+
+        There is no static `Authorization` header on the request — the script
+        adds it at runtime via `insomnia.request.addHeader()`. You could extend
+        this to cache the token in globals to avoid a round-trip on every send.
+
+
+        **When to use:** When you need runtime logic — conditional fetch, token
+        caching, environment-aware auth schemes, or multiple custom headers.
+
+
+        ---
+
+
+        ## 3. Response template tag in header + pre-request path param seeding —
+        `GET /flights/.../bags`
+
+
+        This request stacks two techniques.
+
+
+        ### Auth: Response template tag directly in the Headers tab
+
+
+        Same `{% response %}` chain as example 1, but placed as a raw **header
+        value** rather than in the Auth tab:
+
+
+        ```
+
+        Authorization: Bearer {% response 'body', '<req-id>',
+        'b64::JC50b2tlbg==::46b', 'always', 60 %}
+
+        ```
+
+
+        **When to use:** When you need explicit control over the header
+        name/format — non-standard schemes, or when you want the Authorization
+        header visible alongside other headers rather than in a separate tab.
+
+
+        ### Path param seeding via pre-request script
+
+
+        `flightNumber` and `departureDate` are both required by this endpoint
+        but aren't always known upfront. Rather than forcing a manual lookup,
+        the pre-request script seeds them automatically from `GET /bookings` the
+        first time you send:
+
+
+        ```js
+
+        if (!insomnia.globals.get('flight_number')) {
+          const response = await insomnia.sendRequest({
+            url: insomnia.globals.get('base_url') + '/bookings',
+            method: 'GET'
+          });
+          const bookings = response.json();
+          const booking = bookings.find(b => b.segments && b.segments.length > 0);
+          if (booking) {
+            const segment = booking.segments[0];
+            insomnia.globals.set('flight_number', segment.flightNumber);
+            insomnia.globals.set('departure_date', segment.departureDate);
+          }
+        }
+
+        ```
+
+
+        - On first send, the script calls `GET /bookings`, grabs the first
+        segment of the first booking, and writes both values to globals.
+
+        - The URL template `{{ _.flight_number }}` and `departureDate` query
+        param `{{ _.departure_date }}` then resolve automatically.
+
+        - On subsequent sends the check short-circuits — no extra round-trip.
+
+
+        To force a re-seed with a different flight, clear `flight_number` from
+        globals.
     children:
       - url: "{{ _.base_url }}/bags/:bagTag"
         name: Get bag by tag.
@@ -639,13 +766,13 @@ cookieJar:
   meta:
     id: jar_f22f18ed9d7f5d2eecf16b38e781a39a07faeb00
     created: 1778268014676
-    modified: 1779737487451
+    modified: 1779737852960
 environments:
   name: Base Environment
   meta:
     id: env_f22f18ed9d7f5d2eecf16b38e781a39a07faeb00
     created: 1778268014676
-    modified: 1779737487507
+    modified: 1779737852961
     isPrivate: false
 spec:
   contents:
