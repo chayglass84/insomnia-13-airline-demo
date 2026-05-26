@@ -56,7 +56,7 @@ collection:
     meta:
       id: fld_f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5
       created: 1779753600000
-      modified: 1779743146521
+      modified: 1779802961015
       sortKey: -1779753600001
       description: Synthetic data generation for load and performance testing.
     children:
@@ -138,6 +138,43 @@ collection:
             send: true
             store: true
           rebuildPath: true
+      - url: "{{ _.base_url }}/test/delay"
+        name: Delayed response with prompt
+        meta:
+          id: req_2499a1df6cdc40e4a251818c6635ac58
+          created: 1779802919175
+          modified: 1779802954706
+          isPrivate: false
+          description: Waits for the specified number of milliseconds before returning
+            `200 OK`. Defaults to 500 ms. Use this to test client timeout
+            handling, gateway timeout policies, and latency-dependent logic.
+          sortKey: -1779746488882.5
+        method: GET
+        parameters:
+          - name: ms
+            value: "{% prompt 'How many milliseconds?', '', '500', '', false, true %}"
+            disabled: false
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response has delayed_ms field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('delayed_ms');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
     scripts:
       preRequest: |-
         /*if (!insomnia.globals.get('auth_token')) {
@@ -153,13 +190,13 @@ cookieJar:
   meta:
     id: jar_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
     created: 1779753600000
-    modified: 1779743146519
+    modified: 1779802961011
 environments:
   name: Base Environment
   meta:
     id: env_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
     created: 1779753600000
-    modified: 1779743146521
+    modified: 1779802961014
     isPrivate: false
 spec:
   contents:
