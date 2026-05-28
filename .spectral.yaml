@@ -1,0 +1,104 @@
+extends:
+  - spectral:oas
+rules:
+  operation-summary-required:
+    description: Every operation must have a non-empty summary.
+    message: Operation '{{property}}' is missing a summary.
+    severity: error
+    given: $.paths[*][get,post,put,patch,delete,options,head,trace]
+    then:
+      field: summary
+      function: truthy
+  operation-4xx-response:
+    description: Operations should define at least one 4xx error response.
+    message: Operation must define at least one 4xx response (e.g. 400, 401, 403, 404).
+    severity: error
+    given: $.paths[*][get,post,put,patch,delete]
+    then:
+      field: responses
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required:
+                - "400"
+            - required:
+                - "401"
+            - required:
+                - "403"
+            - required:
+                - "404"
+            - required:
+                - "422"
+            - required:
+                - "429"
+  operation-security-defined:
+    description: Security requirements must reference schemes defined in
+      components/securitySchemes.
+    message: Security scheme '{{value}}' is referenced but not defined in
+      components/securitySchemes.
+    severity: error
+    given: $.paths[*][*].security[*][*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: ^[a-zA-Z0-9_\-]+$
+  schema-description:
+    description: Schemas in components should include a description.
+    message: Schema '{{property}}' is missing a description.
+    severity: warn
+    given: $.components.schemas[*]
+    then:
+      field: description
+      function: truthy
+  response-schema-defined:
+    description: Non-204 success responses should define a schema.
+    message: Response '{{property}}' has content defined but the schema is missing.
+    severity: warn
+    given: $.paths[*][*].responses[?(@property != '204')].content[*]
+    then:
+      field: schema
+      function: truthy
+  path-parameter-description:
+    description: Path parameters should include a description.
+    message: Path parameter '{{value}}' is missing a description.
+    severity: warn
+    given: $.paths[*].parameters[?(@.in == 'path')]
+    then:
+      field: description
+      function: truthy
+  operation-id-camel-case:
+    description: operationId values should be camelCase.
+    message: operationId '{{value}}' must be camelCase (e.g. getBooking, not
+      get_booking or GetBooking).
+    severity: warn
+    given: $.paths[*][*].operationId
+    then:
+      function: pattern
+      functionOptions:
+        match: ^[a-z][a-zA-Z0-9]*$
+  info-contact-url:
+    description: The info.contact object should include a url field.
+    message: info.contact is missing a url field.
+    severity: warn
+    given: $.info.contact
+    then:
+      field: url
+      function: truthy
+  tag-description:
+    description: All root-level tags should include a description.
+    message: Tag '{{value}}' is missing a description.
+    severity: warn
+    given: $.tags[*]
+    then:
+      field: description
+      function: truthy
+  array-bounds:
+    description: Array properties should declare minItems and maxItems.
+    message: Array property '{{property}}' should define minItems and/or maxItems.
+    severity: warn
+    given: $.components.schemas[*].properties[?(@.type == 'array')]
+    then:
+      field: maxItems
+      function: truthy
