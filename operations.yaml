@@ -36,7 +36,7 @@ collection:
         meta:
           id: req_d3f7d3e8b2406c9d5a8f1e7b3c0d9043
           created: 1778270501098
-          modified: 1778270501098
+          modified: 1781124796917
           isPrivate: false
           description: >-
             Credits miles to a member's account, typically after a flight is
@@ -368,7 +368,7 @@ collection:
         meta:
           id: req_b1f7d3e8b2406c9d5a8f1e7b3c0d9021
           created: 1778270503100
-          modified: 1778270503100
+          modified: 1781124471670
           isPrivate: false
           description: >-
             Lists open and recent maintenance work orders, optionally filtered.
@@ -390,7 +390,7 @@ collection:
           - name: status
             value: OPEN
             description: One of OPEN, IN_PROGRESS, CLOSED, CANCELLED.
-            disabled: true
+            disabled: false
           - name: tail
             value: C-FINS
             description: Filter to work orders for a specific airframe.
