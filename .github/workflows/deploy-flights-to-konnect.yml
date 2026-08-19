@@ -1,0 +1,105 @@
+name: Deploy Flights spec to Kong Konnect API Catalog
+
+# Triggers on any change to flights.yaml (the Insomnia doc wrapping the
+# Flights & Airports OpenAPI spec) on the default branch.
+on:
+  push:
+    branches: [master]
+    paths:
+      - flights.yaml
+  workflow_dispatch: {}
+
+env:
+  KONNECT_API_BASE: https://us.api.konghq.com
+  KONNECT_API_NAME: Insomnia Airlines - Flights
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Extract OpenAPI spec from Insomnia document
+        run: python3 .github/scripts/extract_openapi_spec.py flights.yaml openapi.json
+
+      - name: Find or create API in Konnect API Catalog
+        id: api
+        env:
+          KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          existing_id=$(curl -sS --fail-with-body \
+            -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+            -G "${KONNECT_API_BASE}/v3/apis" \
+            --data-urlencode "filter[name]=${KONNECT_API_NAME}" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); items=d.get("data", []); print(items[0]["id"] if items else "")')
+
+          if [ -n "$existing_id" ]; then
+            echo "Found existing API: $existing_id"
+            echo "api_id=$existing_id" >> "$GITHUB_OUTPUT"
+          else
+            echo "No existing API found, creating one"
+            new_id=$(curl -sS --fail-with-body \
+              -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -X POST "${KONNECT_API_BASE}/v3/apis" \
+              -d "$(python3 -c 'import json,os; print(json.dumps({"name": os.environ["KONNECT_API_NAME"]}))')" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+            echo "Created API: $new_id"
+            echo "api_id=$new_id" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish new API version with the OpenAPI spec
+        env:
+          KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+          API_ID: ${{ steps.api.outputs.api_id }}
+        run: |
+          set -euo pipefail
+
+          version=$(python3 -c 'import json; print(json.load(open("openapi.json"))["info"]["version"])')
+
+          payload=$(VERSION="$version" python3 -c '
+          import json, os
+          spec_content = open("openapi.json").read()
+          print(json.dumps({
+              "version": os.environ["VERSION"],
+              "spec": {"content": spec_content},
+          }))
+          ')
+
+          curl -sS --fail-with-body \
+            -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -X POST "${KONNECT_API_BASE}/v3/apis/${API_ID}/versions" \
+            -d "$payload"
+
+# ---------------------------------------------------------------------------
+# decK alternative (NOT USED, for reference only):
+#
+# decK does not manage the Konnect API Catalog (the "APIs" / api_products
+# entity used above) — decK only manages Gateway configuration (services,
+# routes, consumers, plugins) and Konnect control planes declaratively. If
+# this API is later exposed through a Kong Gateway control plane and you
+# want to sync that gateway config as code, it would look like:
+#
+#   - name: Install decK
+#     run: |
+#       curl -sL https://get.konghq.com/deck | sh -s -- -b /usr/local/bin
+#
+#   - name: Sync gateway config to Konnect control plane
+#     env:
+#       DECK_KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+#     run: |
+#       deck gateway sync kong.yaml --konnect-control-plane-name flights-cp
+#
+# That does NOT create/update an API Catalog entry, so it can't replace the
+# curl steps above for this task.
+# ---------------------------------------------------------------------------
