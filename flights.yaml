@@ -538,7 +538,7 @@ spec:
       version: 1.0.0
       contact:
         name: Insomnia Airlines API Team
-        email: api-support@insomnia-airlines.example
+        email: api@insomnia-airlines.example
       license:
         name: Apache 2.0
         url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -1295,4 +1295,4 @@ spec:
   meta:
     id: spc_55c0f7a247dc42909d58a498e1e136ae
     created: 1778266774013
-    modified: 1787166744845
+    modified: 1787166960764
