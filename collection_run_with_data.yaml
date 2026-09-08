@@ -1,0 +1,62 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Collection Run with Data
+meta:
+  id: wrk_9fa27f423ca14df89872a44185eb95b8
+  created: 1788898204511
+  modified: 1788898204511
+  description: ""
+collection:
+  - url: http://localhost:8000/flights/
+    name: Flights
+    meta:
+      id: req_f16a301991e3431fadf233b0c79e06e1
+      created: 1788898051681
+      modified: 1788898456334
+      isPrivate: false
+      description: |-
+        Use the CSV from https://docs.google.com/spreadsheets/d/1OJ7Jwaq7qlK-DiJNeKSiePgheJkm1k9Z9QuQIF48hoM/edit?gid=0#gid=0
+
+        Column headers need to match environment variable names (hence origin and destination in this case)
+      sortKey: -1788898211201
+    method: GET
+    parameters:
+      - name: origin
+        value: "{{origin}}"
+        disabled: false
+      - name: destination
+        value: "{{destination}}"
+        description: ""
+        disabled: false
+    scripts:
+      afterResponse: >-
+        insomnia.test('Status is 200', () =>
+        {   insomnia.expect(insomnia.response.code).to.eql(200);
+
+        });
+
+        insomnia.test('Response body is an array', () => {
+          const body = insomnia.response.json();
+          insomnia.expect(body).to.be.a('array');
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_9004aefc1eb1ef92a24817d8d95f321e37b90690
+    created: 1788898204513
+    modified: 1788898365252
+environments:
+  name: Base Environment
+  meta:
+    id: env_9004aefc1eb1ef92a24817d8d95f321e37b90690
+    created: 1788898204512
+    modified: 1788898365252
+    isPrivate: false

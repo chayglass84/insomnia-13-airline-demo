@@ -179,7 +179,7 @@ collection:
     meta:
       id: fld_0f6df53267ad419ba33cb266808c9852
       created: 1778267676045
-      modified: 1786455903190
+      modified: 1788898026474
       sortKey: -1778267676045
       description: Specific scheduled flight instances on a given date.
     children:
@@ -188,7 +188,7 @@ collection:
         meta:
           id: req_4afdb49a01db4bba814efb7a8b08074c
           created: 1778267676048
-          modified: 1786455902968
+          modified: 1788898306661
           isPrivate: false
           description: >-
             Returns scheduled flight instances. Filters allow narrowing by date,
@@ -204,7 +204,7 @@ collection:
             value: string
             disabled: true
           - name: destination
-            value: string
+            value: FLL
             disabled: true
           - name: departureDate
             value: string
@@ -216,10 +216,12 @@ collection:
             value: "2"
             disabled: false
         scripts:
-          afterResponse: |-
+          afterResponse: >-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+            insomnia.expect(insomnia.response.code).to.eql(200);
+
             });
+
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
               insomnia.expect(body).to.be.a('array');
@@ -370,7 +372,7 @@ collection:
     meta:
       id: fld_78432cf4c48f413383f228efc660c5cc
       created: 1778267676045
-      modified: 1786461212543
+      modified: 1788897802217
       sortKey: -1778267676045
       description: Published city-pairs the airline operates between.
     children:
@@ -420,7 +422,7 @@ collection:
         meta:
           id: req_7e5dfef36f7d465eb003bf927ff0cfaf
           created: 1778267676047
-          modified: 1778267676047
+          modified: 1788897772325
           isPrivate: false
           description: Adds a new origin–destination city-pair to the published network.
           sortKey: -1778267676047
@@ -430,7 +432,7 @@ collection:
           text: |-
             {
               "origin": "YVR",
-              "destination": "ORD",
+              "destination": "FLL",
               "distanceNauticalMiles": 1605,
               "blockTimeMinutes": 245
             }
@@ -441,7 +443,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has origin and destination', () => {
               const body = insomnia.response.json();
@@ -461,7 +463,7 @@ collection:
         meta:
           id: req_2e356bc0d5aa48a0ad5a51b75b19eb87
           created: 1778267676048
-          modified: 1778267676048
+          modified: 1788897796438
           isPrivate: false
           description: Removes a route from the published network. Fails if future flights
             still reference it.
@@ -475,6 +477,9 @@ collection:
             send: true
             store: true
           rebuildPath: true
+        pathParameters:
+          - name: routeId
+            value: b0b4263a-a859-4c6b-817c-08912d09948d
       - url: "{{ _.base_url }}/routes/:routeId"
         name: Get route by ID.
         meta:
@@ -507,13 +512,13 @@ cookieJar:
   meta:
     id: jar_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774014
-    modified: 1786455903146
+    modified: 1788898026473
 environments:
   name: Base Environment
   meta:
     id: env_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774013
-    modified: 1786455903171
+    modified: 1788898026474
     isPrivate: false
 spec:
   contents:
