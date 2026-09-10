@@ -11,7 +11,7 @@ collection:
     meta:
       id: fld_0e5467398ea849d1af43767632f55ddc
       created: 1778267676045
-      modified: 1778273505588
+      modified: 1788918210916
       sortKey: -1778267676045
       description: Airports served by Insomnia Airlines.
     children:
@@ -20,7 +20,7 @@ collection:
         meta:
           id: req_ec678ccaa5b34b47a2ef5128ee88e845
           created: 1778267676045
-          modified: 1778273484219
+          modified: 1788918207736
           isPrivate: false
           description: Returns the airports served by Insomnia Airlines, optionally
             filtered by country.
@@ -33,10 +33,17 @@ collection:
           - name: limit
             value: "2"
             disabled: false
+        headers:
+          - name: x-SecretToken
+            value: "{% vault 'aws', 'externalVaultTag_1f4e903eb00845d6bdab9ea3a29dee74',
+              'eyJTZWNyZXRJZCI6ImNhbS1kZW1vLWF3cy12YXVsdC1zZWNyZXQiLCJTZWNyZXRU\
+              eXBlIjoia3YiLCJTZWNyZXRLZXkiOiJjYW1zX21hZ2ljX3Bhc3N3b3JkIn0=' %}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -82,7 +89,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has iataCode field', () => {
               const body = insomnia.response.json();
@@ -123,7 +130,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
         settings:
           renderRequestBody: true
@@ -160,7 +167,7 @@ collection:
         scripts:
           afterResponse: >-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
 
             insomnia.test('Created airport has all required fields', () => {
@@ -179,7 +186,7 @@ collection:
     meta:
       id: fld_0f6df53267ad419ba33cb266808c9852
       created: 1778267676045
-      modified: 1788898026474
+      modified: 1788988716659
       sortKey: -1778267676045
       description: Specific scheduled flight instances on a given date.
     children:
@@ -188,7 +195,7 @@ collection:
         meta:
           id: req_4afdb49a01db4bba814efb7a8b08074c
           created: 1778267676048
-          modified: 1788898306661
+          modified: 1788987675471
           isPrivate: false
           description: >-
             Returns scheduled flight instances. Filters allow narrowing by date,
@@ -264,7 +271,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has flightNumber field', () => {
               const body = insomnia.response.json();
@@ -292,7 +299,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has flightNumber field', () => {
               const body = insomnia.response.json();
@@ -339,7 +346,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
         settings:
           renderRequestBody: true
@@ -403,7 +410,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -493,7 +500,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has id field', () => {
               const body = insomnia.response.json();
@@ -512,13 +519,13 @@ cookieJar:
   meta:
     id: jar_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774014
-    modified: 1788898026473
+    modified: 1788988716658
 environments:
   name: Base Environment
   meta:
     id: env_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774013
-    modified: 1788898026474
+    modified: 1788988716658
     isPrivate: false
 spec:
   contents:
@@ -1300,4 +1307,4 @@ spec:
   meta:
     id: spc_55c0f7a247dc42909d58a498e1e136ae
     created: 1778266774013
-    modified: 1787167416583
+    modified: 1788918029078

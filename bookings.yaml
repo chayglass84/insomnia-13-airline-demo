@@ -61,7 +61,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has pnr field', () => {
               const body = insomnia.response.json();
@@ -88,7 +88,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has pnr field', () => {
               const body = insomnia.response.json();
@@ -129,7 +129,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -171,7 +171,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
         settings:
           renderRequestBody: true
@@ -239,7 +239,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -281,7 +281,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has seatNumber field', () => {
               const body = insomnia.response.json();
@@ -319,7 +319,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
         settings:
           renderRequestBody: true
@@ -350,7 +350,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -392,7 +392,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has id field', () => {
               const body = insomnia.response.json();
@@ -419,7 +419,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has id field', () => {
               const body = insomnia.response.json();
@@ -465,7 +465,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has frequentFlyerId field', () => {
               const body = insomnia.response.json();
@@ -496,7 +496,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -1410,4 +1410,4 @@ spec:
   meta:
     id: spc_46a53c6013b54e1a81ead9283b3ae566
     created: 1778268038799
-    modified: 1778268038799
+    modified: 1788918029083

@@ -185,7 +185,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has bagTag field', () => {
               const body = insomnia.response.json();
@@ -229,7 +229,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has bagTag field', () => {
               const body = insomnia.response.json();
@@ -274,7 +274,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -293,7 +293,7 @@ collection:
         meta:
           id: req_1f87e9944aba48e992399baa002e346e
           created: 1778268657030
-          modified: 1779737551878
+          modified: 1788989352392
           isPrivate: false
           description: |-
             Returns bags currently assigned to a given flight instance. Used by
@@ -309,6 +309,10 @@ collection:
           - name: Authorization
             value: Bearer {% response 'body', 'req_5ba25ad947d6419fb339cbdea342f5ad',
               'b64::JC50b2tlbg==::46b', 'always', 60 %}
+            description: ""
+            disabled: false
+          - name: ""
+            value: "{% vault 'aws', '', '{}' %}"
             description: ""
             disabled: false
         scripts:
@@ -328,7 +332,7 @@ collection:
             }
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -387,7 +391,7 @@ collection:
 
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -429,7 +433,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
         settings:
           renderRequestBody: true
@@ -495,7 +499,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -541,7 +545,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has type field', () => {
               const body = insomnia.response.json();
@@ -601,7 +605,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
         settings:
           renderRequestBody: true
@@ -628,7 +632,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body has caseId field', () => {
               const body = insomnia.response.json();
@@ -677,7 +681,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
-              insomnia.expect(insomnia.response.status).to.eql(201);
+              insomnia.expect(insomnia.response.code).to.eql(201);
             });
             insomnia.test('Response body has caseId field', () => {
               const body = insomnia.response.json();
@@ -737,7 +741,7 @@ collection:
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
-              insomnia.expect(insomnia.response.status).to.eql(200);
+              insomnia.expect(insomnia.response.code).to.eql(200);
             });
             insomnia.test('Response body is an array', () => {
               const body = insomnia.response.json();
@@ -1599,4 +1603,4 @@ spec:
   meta:
     id: spc_a843f4922ef248898e4eea7acd4c11fa
     created: 1778268014675
-    modified: 1779737457029
+    modified: 1788918029080
