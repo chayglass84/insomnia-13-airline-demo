@@ -1,0 +1,1457 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Special Characters
+meta:
+  id: wrk_5c4a1f0b9d2e4a7b8c6d5e3f2a1b0c9d
+  created: 1789000000000
+  modified: 1789000000000
+  description: >-
+    # Special Characters Torture Test
+
+
+    A collection that pushes punctuation, Unicode, control characters, and
+    template-tag syntax through **every field Insomnia exposes**: JSON bodies,
+    query params, path params, headers, cookies, form fields, multipart, and
+    environment variables.
+
+
+    ## How to prove it works
+
+
+    Every request targets an **echo service** (`{{ _.echo_url }}`, default
+    `https://httpbin.org`) that reflects exactly what it received. Each request
+    has an `afterResponse` test that compares the **echoed value against the
+    value that was sent**. Green tests = the bytes survived the round trip
+    unchanged.
+
+
+    Run the whole thing with the **Collection Runner**. If a customer claims
+    Insomnia mangles `-`, `_`, or `,`, this is the receipt.
+
+
+    ## The three things that actually bite people
+
+
+    Insomnia has no character blocklist. What people usually hit is one of
+    these, and all three are demonstrated in folder `05`:
+
+
+    1. **`{{ ... }}` and `{% ... %}` are template syntax.** If your data
+    legitimately
+       contains double curly braces, Insomnia tries to render it as a variable and
+       either substitutes it or fails outright. There is no backslash-escape for
+       this - the fix is to turn off *Settings -> Render Request Body* on that
+       request.
+
+    2. **Non-ASCII in HTTP headers.** Header values are latin-1 by the RFC. An
+       emoji in a header is an HTTP-level constraint, not an Insomnia one. Fix:
+       RFC 8187 (`Header*=UTF-8''...`) or base64.
+
+    3. **URL auto-encoding.** *Settings -> Encode URL* percent-encodes reserved
+       characters in the URL. That is correct behavior, but it means the raw URL
+       string you typed is not the raw string on the wire. Toggle it off to send
+       pre-encoded URLs verbatim.
+
+
+    ## Swapping the target
+
+
+    Change `echo_url` in the Base Environment to point at the customer's own API
+    if you want to test their stack instead of httpbin.
+collection:
+  - name: 01 JSON Bodies
+    meta:
+      id: fld_01a1b2c3d4e5f60718293a4b5c6d7e8f
+      created: 1789000000000
+      modified: 1789054626777
+      sortKey: -1789000000100
+      description: JSON request bodies stuffed with punctuation, Unicode, escapes, and
+        control characters. Each test asserts the echoed `json` object matches
+        what was sent, byte for byte.
+    children:
+      - url: "{{ _.echo_url }}/post"
+        name: ASCII punctuation - every printable symbol
+        meta:
+          id: req_01aa1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: The exact characters the customer named (`-`, `_`, `,`) plus the
+            rest of printable ASCII punctuation, in both JSON **keys** and
+            **values**.
+          sortKey: -1789000000101
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "dashes-and_underscores": "a-b_c,d.e",
+              "comma,in,key": "one,two,three",
+              "quotes": "single ' double \" backtick ` curly \u201cx\u201d \u2018y\u2019",
+              "brackets": "(round) [square] <angle>",
+              "braces_single": "open { close } both {}",
+              "slashes": "forward / back \\ pipe |",
+              "math": "+ - * = % ^ ~ < >",
+              "shell_metachars": "! @ # $ & * ( ) ; : ? |",
+              "punctuation": ". , ; : ! ? ' \" ...",
+              "whitespace": "tab\there newline\nhere  double  space",
+              "empty_string": "",
+              "only_spaces": "   ",
+              "sql_looking": "Robert'); DROP TABLE Students;--",
+              "html_looking": "<script>alert('xss')</script>",
+              "path_looking": "../../etc/passwd",
+              "url_looking": "https://a.example/b?c=d&e=f#g",
+              "email_looking": "first.last+tag@sub.example.co.uk",
+              "money": "$1,234.56 (USD) -12.5%",
+              "flight_code": "IA-204_YYZ,LHR"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+            const sent = JSON.parse(insomnia.request.body.toString());
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Every key and value survived the round trip', () => {
+              insomnia.expect(echoed).to.deep.eql(sent);
+            });
+
+
+            insomnia.test('Dashes, underscores and commas are intact', () => {
+              insomnia.expect(echoed['dashes-and_underscores']).to.eql('a-b_c,d.e');
+              insomnia.expect(echoed['comma,in,key']).to.eql('one,two,three');
+            });
+
+
+            insomnia.test('Tab and newline are preserved, not stripped', () => {
+              insomnia.expect(echoed.whitespace).to.include('\t');
+              insomnia.expect(echoed.whitespace).to.include('\n');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Unicode - emoji, CJK, RTL, accents
+        meta:
+          id: req_01bb1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: "Multi-byte UTF-8: emoji (including ZWJ sequences and skin-tone
+            modifiers), CJK, right-to-left scripts, combining diacritics, and
+            characters outside the Basic Multilingual Plane."
+          sortKey: -1789000000102
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "emoji_basic": "\u2708\ufe0f \ud83e\uddf3 \ud83c\udf0d \u2705 \u274c",
+              "emoji_zwj_family": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66",
+              "emoji_skin_tone": "\ud83d\udc4b\ud83c\udffd \ud83d\udc69\ud83c\udffe\u200d\u2708\ufe0f",
+              "flag_sequence": "\ud83c\udde8\ud83c\udde6 \ud83c\uddec\ud83c\udde7 \ud83c\uddef\ud83c\uddf5",
+              "cjk_chinese": "\u591a\u4f26\u591a\u76ae\u5c14\u900a\u56fd\u9645\u673a\u573a",
+              "cjk_japanese": "\u6771\u4eac\u56fd\u969b\u7a7a\u6e2f\uff08\u7fbd\u7530\uff09",
+              "korean": "\uc778\ucc9c\uad6d\uc81c\uacf5\ud56d",
+              "rtl_arabic": "\u0645\u0637\u0627\u0631 \u062f\u0628\u064a \u0627\u0644\u062f\u0648\u0644\u064a",
+              "rtl_hebrew": "\u05e0\u05de\u05dc \u05d4\u05ea\u05e2\u05d5\u05e4\u05d4 \u05d1\u05df \u05d2\u05d5\u05e8\u05d9\u05d5\u05df",
+              "bidi_mixed": "Gate A-12 \u0645\u0637\u0627\u0631 terminal_3",
+              "accents_precomposed": "Montr\u00e9al Z\u00fcrich S\u00e3o Paulo Malm\u00f6",
+              "accents_combining": "Montre\u0301al Zu\u0308rich",
+              "cyrillic": "\u0428\u0435\u0440\u0435\u043c\u0435\u0442\u044c\u0435\u0432\u043e",
+              "greek": "\u0395\u03bb\u03b5\u03c5\u03b8\u03ad\u03c1\u03b9\u03bf\u03c2 \u0392\u03b5\u03bd\u03b9\u03b6\u03ad\u03bb\u03bf\u03c2",
+              "thai_no_spaces": "\u0e17\u0e48\u0e32\u0e2d\u0e32\u0e01\u0e32\u0e28\u0e22\u0e32\u0e19\u0e2a\u0e38\u0e27\u0e23\u0e23\u0e13\u0e20\u0e39\u0e21\u0e34",
+              "currency": "$ \u20ac \u00a3 \u00a5 \u20b9 \u20a9 \u20bd \u20ba",
+              "typography": "en\u2013dash em\u2014dash ellipsis\u2026 bullet\u2022 dagger\u2020",
+              "math_symbols": "\u2211 \u220f \u221a \u221e \u2260 \u2264 \u2265 \u00b1 \u00d7 \u00f7",
+              "astral_plane": "\ud834\udd1e \ud83d\ude80 \ud840\udc0b",
+              "unicode_key_\u2708\ufe0f": "emoji in the key name",
+              "\u4e2d\u6587\u952e": "CJK key name"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json; charset=utf-8
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+            const sent = JSON.parse(insomnia.request.body.toString());
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('All Unicode survived the round trip', () => {
+              insomnia.expect(echoed).to.deep.eql(sent);
+            });
+
+
+            insomnia.test('ZWJ emoji sequence is not split into components', ()
+            => {
+              insomnia.expect(echoed.emoji_zwj_family).to.eql('\u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466}');
+            });
+
+
+            insomnia.test('Astral-plane surrogate pairs are intact', () => {
+              insomnia.expect([...echoed.astral_plane].length).to.be.above(0);
+              insomnia.expect(echoed.astral_plane).to.include('\u{1D11E}');
+            });
+
+
+            insomnia.test('Combining diacritics are NOT silently normalized', ()
+            => {
+              insomnia.expect(echoed.accents_combining).to.eql('Montre\u0301al Zu\u0308rich');
+              insomnia.expect(echoed.accents_combining).to.not.eql(echoed.accents_precomposed);
+            });
+
+
+            insomnia.test('Non-ASCII object keys survived', () => {
+              insomnia.expect(Object.keys(echoed)).to.include('\u4E2D\u6587\u952E');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Escapes and control characters
+        meta:
+          id: req_01cc1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: JSON escape sequences, C0 control characters, the zero-width
+            family, a BOM, and a lone-surrogate-adjacent replacement char. This
+            is where a lossy pipeline usually breaks first.
+          sortKey: -1789000000103
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "escaped_quote": "she said \"hello\"",
+              "escaped_backslash": "C:\\Users\\test\\file.txt",
+              "escaped_slash": "a\/b\/c",
+              "json_escapes": "\b \f \n \r \t",
+              "control_null": "before\u0000after",
+              "control_soh": "\u0001\u0002\u0003",
+              "control_esc": "\u001b[31mred\u001b[0m",
+              "control_del": "\u007f",
+              "zero_width_space": "a\u200bb",
+              "zero_width_joiner": "a\u200db",
+              "zero_width_nonjoiner": "a\u200cb",
+              "byte_order_mark": "\ufeffleading BOM",
+              "line_separator": "a\u2028b",
+              "paragraph_separator": "a\u2029b",
+              "nbsp": "non\u00a0breaking\u00a0space",
+              "soft_hyphen": "soft\u00adhyphen",
+              "replacement_char": "\ufffd",
+              "nested_json_string": "{\"looks\":\"like json\",\"but\":\"is a string\"}",
+              "escaped_unicode": "\u0041\u0042\u0043"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+            const sent = JSON.parse(insomnia.request.body.toString());
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('All escapes and control chars survived', () => {
+              insomnia.expect(echoed).to.deep.eql(sent);
+            });
+
+
+            insomnia.test('Embedded NUL byte is preserved, not truncated', () =>
+            {
+              insomnia.expect(echoed.control_null).to.eql('before\u0000after');
+              insomnia.expect(echoed.control_null.length).to.eql(12);
+            });
+
+
+            insomnia.test('Zero-width characters were not stripped', () => {
+              insomnia.expect(echoed.zero_width_space).to.eql('a\u200Bb');
+              insomnia.expect(echoed.zero_width_space.length).to.eql(3);
+            });
+
+
+            insomnia.test('Backslash paths are not double-escaped', () => {
+              insomnia.expect(echoed.escaped_backslash).to.eql('C:\\Users\\test\\file.txt');
+            });
+
+
+            insomnia.test('A JSON-looking string stays a string', () => {
+              insomnia.expect(echoed.nested_json_string).to.be.a('string');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Realistic airline payload with dirty data
+        meta:
+          id: req_01dd1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: "The customer-shaped case: a plausible booking payload where the
+            special characters appear in the places real data actually puts them
+            - hyphenated surnames, apostrophes, commas in addresses, plus signs
+            in phone numbers and emails, accented city names."
+          sortKey: -1789000000104
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "pnr": "AB-12_34",
+              "contactEmail": "o'brien.smith-jones+booking@sub-domain.example.co.uk",
+              "passengers": [
+                {
+                  "firstName": "Mar\u00eda-Jos\u00e9",
+                  "lastName": "O'Brien-Smith",
+                  "middleName": "de la Cruz",
+                  "phone": "+1 (416) 555-0199 ext. 42",
+                  "frequentFlyerId": "FF_1029-384,X",
+                  "notes": "Wheelchair req'd; gate-side delivery, seat 14C/14D",
+                  "address": "1 King's Road, Apt #5-B, Toronto, ON M5V 1J2, Canada",
+                  "passportName": "MARIA-JOSE O BRIEN SMITH"
+                },
+                {
+                  "firstName": "\u5f20",
+                  "lastName": "\u4f1f",
+                  "phone": "+86-10-1234-5678",
+                  "notes": "Meal: \u4e2d\u9910 / vegetarian \u2014 no pork",
+                  "address": "\u5317\u4eac\u5e02\u671d\u9633\u533a\u5efa\u56fd\u8def 1 \u53f7"
+                }
+              ],
+              "segments": [
+                {
+                  "flightNumber": "IA-204",
+                  "route": "YYZ->LHR",
+                  "departureDate": "2026-05-12T08:30:00-04:00",
+                  "travelClass": "Premium/Economy",
+                  "fareBasis": "Y1_FLEX-CA,B"
+                }
+              ],
+              "pricing": {
+                "base": "$1,234.56",
+                "taxes_&_fees": "$187.40",
+                "currency": "CAD",
+                "discount": "-12.5%",
+                "promoCode": "SAVE_20-NOW!"
+              },
+              "specialRequests": "Aisle seat, please \u2014 traveling w/ infant (0-2 yrs). Contact @ +1-416-555-0199."
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+            const sent = JSON.parse(insomnia.request.body.toString());
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Booking payload survived the round trip', () => {
+              insomnia.expect(echoed).to.deep.eql(sent);
+            });
+
+
+            insomnia.test('Apostrophes and hyphens in names are intact', () => {
+              insomnia.expect(echoed.passengers[0].lastName).to.eql("O'Brien-Smith");
+              insomnia.expect(echoed.passengers[0].firstName).to.eql('Mar\u00EDa-Jos\u00E9');
+            });
+
+
+            insomnia.test('Plus signs in email and phone are intact', () => {
+              insomnia.expect(echoed.contactEmail).to.include('+booking@');
+              insomnia.expect(echoed.passengers[0].phone).to.match(/^\+1 \(416\)/);
+            });
+
+
+            insomnia.test('Commas in the address are intact', () => {
+              insomnia.expect(echoed.passengers[0].address.split(',').length).to.eql(5);
+            });
+
+
+            insomnia.test('Ampersand in a key name is intact', () => {
+              insomnia.expect(echoed.pricing['taxes_&_fees']).to.eql('$187.40');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 02 URLs, Query Params and Paths
+    meta:
+      id: fld_02a1b2c3d4e5f60718293a4b5c6d7e8f
+      created: 1789000000000
+      modified: 1789054626244
+      sortKey: -1789000000200
+      description: "Special characters in the URL itself. The one real behavior to
+        know about: **Settings -> Encode URL** percent-encodes reserved
+        characters on the way out. That is correct and RFC-compliant, but it
+        means the string on the wire differs from the string you typed. The last
+        request in this folder turns it off so you can compare."
+    children:
+      - url: "{{ _.echo_url }}/get"
+        name: Query params - reserved and unsafe characters
+        meta:
+          id: req_02aa1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: Every reserved character from RFC 3986 as a query-param value, plus
+            spaces, emoji, and characters that look like param delimiters.
+          sortKey: -1789000000201
+        method: GET
+        parameters:
+          - name: dashes-and_underscores
+            value: a-b_c,d.e
+            disabled: false
+          - name: comma,in,name
+            value: one,two,three
+            disabled: false
+          - name: reserved
+            value: :/?#[]@!$&'()*+,;=
+            disabled: false
+          - name: spaces
+            value: hello world  two spaces
+            disabled: false
+          - name: plus_sign
+            value: a+b (is this a space or a plus?)
+            disabled: false
+          - name: percent
+            value: 100% and a literal %20
+            disabled: false
+          - name: ampersand_in_value
+            value: a&b=c&d
+            disabled: false
+          - name: quotes
+            value: single ' double " backtick `
+            disabled: false
+          - name: unicode
+            value: Montréal ✈️ 多伦多
+            disabled: false
+          - name: empty_value
+            value: ""
+            disabled: false
+          - name: url_in_a_param
+            value: https://other.example/path?x=1&y=2#frag
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const args = insomnia.response.json().args;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Dashes, underscores and commas round trip', () => {
+              insomnia.expect(args['dashes-and_underscores']).to.eql('a-b_c,d.e');
+              insomnia.expect(args['comma,in,name']).to.eql('one,two,three');
+            });
+
+
+            insomnia.test('All RFC 3986 reserved characters round trip', () => {
+              insomnia.expect(args.reserved).to.eql(":/?#[]@!$&'()*+,;=");
+            });
+
+
+            insomnia.test('An ampersand in a value does not split the param', ()
+            => {
+              insomnia.expect(args.ampersand_in_value).to.eql('a&b=c&d');
+            });
+
+
+            insomnia.test('A plus sign stays a plus, not a space', () => {
+              insomnia.expect(args.plus_sign).to.include('a+b');
+            });
+
+
+            insomnia.test('Spaces are preserved exactly', () => {
+              insomnia.expect(args.spaces).to.eql('hello world  two spaces');
+            });
+
+
+            insomnia.test('A nested URL with its own query string survives', ()
+            => {
+              insomnia.expect(args.url_in_a_param).to.eql('https://other.example/path?x=1&y=2#frag');
+            });
+
+
+            insomnia.test('Unicode in query params round trips', () => {
+              insomnia.expect(args.unicode).to.eql('Montr\u00E9al \u2708\uFE0F \u591A\u4F26\u591A');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/anything/:booking_ref/segments/:route"
+        name: Path params with special characters
+        meta:
+          id: req_02bb1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: Path parameters (`:booking_ref`, `:route`) carrying hyphens,
+            underscores, commas and a slash. Note that a `/` inside a path param
+            value gets percent-encoded to `%2F` so it does not create a new path
+            segment - which is exactly what you want.
+          sortKey: -1789000000202
+        method: GET
+        scripts:
+          afterResponse: >-
+            const body = insomnia.response.json();
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Path param special characters reached the server', ()
+            => {
+              insomnia.expect(decodeURIComponent(body.url)).to.include('AB-12_34,X');
+              insomnia.expect(decodeURIComponent(body.url)).to.include('YYZ-LHR');
+            });
+
+
+            insomnia.test('Path structure was not broken by the values', () => {
+              insomnia.expect(body.url).to.include('/segments/');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: booking_ref
+            value: AB-12_34,X
+          - name: route
+            value: YYZ-LHR
+      - url: "{{ _.echo_url }}/get?pre_encoded=a%2Bb%20c%26d&raw=untouched-_,."
+        name: Encode URL OFF - send the URL verbatim
+        meta:
+          id: req_02cc1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: >-
+            Same idea as the query-param request, but with **Settings -> Encode
+            URL turned off**. Insomnia sends the URL string byte-for-byte as
+            typed, so `%2B` stays `%2B` instead of being re-encoded to `%252B`.
+
+
+            **This is the setting to reach for** when a customer says Insomnia
+            is "changing" their URL. It is not stripping characters; it is
+            encoding them, and this toggle stops it.
+          sortKey: -1789000000203
+        method: GET
+        scripts:
+          afterResponse: >-
+            const args = insomnia.response.json().args;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Pre-encoded sequences were NOT double-encoded', () =>
+            {
+              insomnia.expect(args.pre_encoded).to.eql('a+b c&d');
+            });
+
+
+            insomnia.test('Unreserved punctuation passed through untouched', ()
+            => {
+              insomnia.expect(args.raw).to.eql('untouched-_,.');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: false
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 03 Headers and Cookies
+    meta:
+      id: fld_03a1b2c3d4e5f60718293a4b5c6d7e8f
+      created: 1789000000000
+      modified: 1789054625885
+      sortKey: -1789000000300
+      description: Headers are the one place where a real character limit exists, and
+        it is **not Insomnia's**. Per RFC 7230 header values are ISO-8859-1;
+        there is no defined way to put an emoji in a raw header value. The
+        standard answers are RFC 8187 encoding or base64, both demonstrated
+        here.
+    children:
+      - url: "{{ _.echo_url }}/headers"
+        name: Header values - safe ASCII punctuation
+        meta:
+          id: req_03aa1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: Punctuation that is perfectly legal in a header value, including
+            the characters the customer flagged. All of this round trips fine.
+          sortKey: -1789000000301
+        method: GET
+        headers:
+          - name: X-Dashes-And_Underscores
+            value: a-b_c,d.e
+            disabled: false
+          - name: X-Punctuation
+            value: "!#$%&'*+-.^_`|~"
+            disabled: false
+          - name: X-Comma-List
+            value: one, two, three
+            disabled: false
+          - name: X-Quoted-String
+            value: '"a quoted, value" and (a comment)'
+            disabled: false
+          - name: X-Path-Like
+            value: /api/v1/bookings?ref=AB-12
+            disabled: false
+          - name: X-Json-In-A-Header
+            value: '{"key":"value","n":1}'
+            disabled: false
+          - name: X-Base64-Padded
+            value: SGVsbG8sIHdvcmxkIQ==
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const raw = insomnia.response.json().headers; const normalize = s =>
+            s.toLowerCase().replace(/[-_]/g, ''); const lookup = {};
+            Object.keys(raw).forEach(k => { lookup[normalize(k)] = raw[k]; });
+            const h = name => lookup[normalize(name)];
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Dashes, underscores and commas round trip in
+            headers', () => {
+              insomnia.expect(h('X-Dashes-And_Underscores')).to.eql('a-b_c,d.e');
+              insomnia.expect(h('X-Comma-List')).to.eql('one, two, three');
+            });
+
+
+            insomnia.test('All RFC 7230 tchar punctuation round trips', () => {
+              insomnia.expect(h('X-Punctuation')).to.eql("!#$%&'*+-.^_`|~");
+            });
+
+
+            insomnia.test('A JSON blob in a header value survives', () => {
+              insomnia.expect(JSON.parse(h('X-Json-In-A-Header')).n).to.eql(1);
+            });
+
+
+            insomnia.test('Base64 padding (=) is not stripped', () => {
+              insomnia.expect(h('X-Base64-Padded')).to.eql('SGVsbG8sIHdvcmxkIQ==');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/headers"
+        name: Non-ASCII in headers - the RFC 8187 workaround
+        meta:
+          id: req_03bb1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: |-
+            Three ways to move `Montr\u00e9al \u2708\ufe0f` through a header.
+
+            - `X-Raw-Unicode` sends it literally. Behavior here is the transport
+              layer's call, not Insomnia's, and it may be mangled or rejected.
+            - `X-Encoded*` uses **RFC 8187** (`UTF-8''<percent-encoded>`), the
+              standard way to carry non-ASCII in a header. Same mechanism as
+              `Content-Disposition; filename*=`.
+            - `X-Base64` is the belt-and-braces option.
+
+            The last two are asserted; the raw one is informational.
+          sortKey: -1789000000302
+        method: GET
+        headers:
+          - name: X-Raw-Unicode
+            value: Montréal ✈️
+            disabled: false
+          - name: X-Encoded*
+            value: UTF-8''Montr%C3%A9al%20%E2%9C%88%EF%B8%8F
+            disabled: false
+          - name: X-Base64
+            value: TW9udHLDqWFsIOKciO+4jw==
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const h = insomnia.response.json().headers;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('RFC 8187 encoded header decodes back to the
+            original', () => {
+              const raw = h['X-Encoded*'];
+              const decoded = decodeURIComponent(raw.replace(/^UTF-8''/, ''));
+              insomnia.expect(decoded).to.eql('Montr\u00E9al \u2708\uFE0F');
+            });
+
+
+            insomnia.test('Base64 header decodes back to the original', () => {
+              const decoded = new TextDecoder().decode(
+                Uint8Array.from(atob(h['X-Base64']), c => c.charCodeAt(0))
+              );
+              insomnia.expect(decoded).to.eql('Montr\u00E9al \u2708\uFE0F');
+            });
+
+
+            console.log('Raw unicode header arrived as:',
+            JSON.stringify(h['X-Raw-Unicode']));
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/cookies"
+        name: Cookie values with punctuation
+        meta:
+          id: req_03cc1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: Cookie values are more restricted than header values in general -
+            no commas, semicolons or spaces unless quoted. This sends a legal
+            punctuation set and a base64 value with `=` padding.
+          sortKey: -1789000000303
+        method: GET
+        headers:
+          - name: Cookie
+            value: session_id=abc-123_XYZ; pref=a.b~c!d; token=SGVsbG8sIHdvcmxkIQ==
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const cookies = insomnia.response.json().cookies;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Dashes and underscores round trip in cookie values',
+            () => {
+              insomnia.expect(cookies.session_id).to.eql('abc-123_XYZ');
+            });
+
+
+            insomnia.test('Dots, tildes and bangs round trip', () => {
+              insomnia.expect(cookies.pref).to.eql('a.b~c!d');
+            });
+
+
+            insomnia.test('Base64 padding survives in a cookie', () => {
+              insomnia.expect(cookies.token).to.eql('SGVsbG8sIHdvcmxkIQ==');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 04 Form and Multipart Bodies
+    meta:
+      id: fld_04a1b2c3d4e5f60718293a4b5c6d7e8f
+      created: 1789000000000
+      modified: 1789054625565
+      sortKey: -1789000000400
+      description: Non-JSON body types. Form-urlencoded has its own encoding rules
+        (`+` for space, `%XX` for everything reserved); multipart has boundary
+        strings that badly-chosen data can theoretically collide with.
+    children:
+      - url: "{{ _.echo_url }}/post"
+        name: Form URL-encoded with special characters
+        meta:
+          id: req_04aa1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: The `+`-vs-space ambiguity is the classic form-encoding trap. A
+            literal `+` must go on the wire as `%2B` or it is decoded as a
+            space. This asserts Insomnia gets that right.
+          sortKey: -1789000000401
+        method: POST
+        body:
+          mimeType: application/x-www-form-urlencoded
+          params:
+            - name: dashes-and_underscores
+              value: a-b_c,d.e
+              disabled: false
+            - name: plus_literal
+              value: a+b
+              disabled: false
+            - name: space_literal
+              value: a b
+              disabled: false
+            - name: ampersand
+              value: a&b=c
+              disabled: false
+            - name: percent
+              value: 50% off
+              disabled: false
+            - name: unicode
+              value: Montréal ✈️
+              disabled: false
+            - name: newline
+              value: |-
+                line one
+                line two
+              disabled: false
+            - name: key,with,commas
+              value: value
+              disabled: false
+        headers:
+          - name: Content-Type
+            value: application/x-www-form-urlencoded
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const form = insomnia.response.json().form;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Dashes, underscores and commas round trip', () => {
+              insomnia.expect(form['dashes-and_underscores']).to.eql('a-b_c,d.e');
+              insomnia.expect(form['key,with,commas']).to.eql('value');
+            });
+
+
+            insomnia.test('A literal plus is NOT decoded as a space', () => {
+              insomnia.expect(form.plus_literal).to.eql('a+b');
+            });
+
+
+            insomnia.test('A literal space is NOT decoded as a plus', () => {
+              insomnia.expect(form.space_literal).to.eql('a b');
+            });
+
+
+            insomnia.test('An ampersand in a value does not split the field', ()
+            => {
+              insomnia.expect(form.ampersand).to.eql('a&b=c');
+            });
+
+
+            insomnia.test('Unicode round trips through form encoding', () => {
+              insomnia.expect(form.unicode).to.eql('Montr\u00E9al \u2708\uFE0F');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Multipart with boundary-lookalike data
+        meta:
+          id: req_04bb1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: Multipart fields whose values contain CRLFs, dashes, and text that
+            imitates a MIME boundary. If the encoder is naive, one of these
+            splits the body early. If it is correct, everything round trips.
+          sortKey: -1789000000402
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: dashes-and_underscores
+              value: a-b_c,d.e
+              disabled: false
+              type: text
+            - name: boundary_lookalike
+              value: --WebKitFormBoundary7MA4YWxkTrZu0gW
+              disabled: false
+              type: text
+            - name: crlf_injection_attempt
+              value: "value\r\nX-Injected-Header: nope"
+              disabled: false
+              type: text
+            - name: quoted_filename_chars
+              value: report "final", v2 (2026-05-12).pdf
+              disabled: false
+              type: text
+            - name: unicode
+              value: 多伦多 ✈️ Montréal
+              disabled: false
+              type: text
+        scripts:
+          afterResponse: >-
+            const form = insomnia.response.json().form;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('All five multipart fields arrived', () => {
+              insomnia.expect(Object.keys(form).length).to.eql(5);
+            });
+
+
+            insomnia.test('Boundary-lookalike text did not terminate the body',
+            () => {
+              insomnia.expect(form.boundary_lookalike).to.include('WebKitFormBoundary');
+            });
+
+
+            insomnia.test('CRLF in a value did not inject a header', () => {
+              insomnia.expect(form.crlf_injection_attempt).to.include('X-Injected-Header');
+              insomnia.expect(insomnia.response.json().headers).to.not.have.property('X-Injected-Header');
+            });
+
+
+            insomnia.test('Quotes and parens in a value round trip', () => {
+              insomnia.expect(form.quoted_filename_chars).to.eql('report "final", v2 (2026-05-12).pdf');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Raw text body - no parsing, no escaping
+        meta:
+          id: req_04cc1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: A `text/plain` body containing CSV-ish data with quoted commas,
+            Windows and Unix line endings, and a trailing tab. Nothing here is
+            parsed by Insomnia, so it is the cleanest proof that bytes go out
+            unmodified.
+          sortKey: -1789000000403
+        method: POST
+        body:
+          mimeType: text/plain
+          text: "pnr,last_name,seat,notes\r
+
+            AB-12_34,\"O'Brien-Smith, Maria-Jose\",14C,\"Wheelchair req'd;
+            gate-side\"\r
+
+            CD_56-78,\"张伟\",22A,\"Meal: 中餐 — no pork\"
+
+            EF-90,\"Tab\there\",1A,\t"
+        headers:
+          - name: Content-Type
+            value: text/plain; charset=utf-8
+            disabled: false
+        scripts:
+          afterResponse: |-
+            const data = insomnia.response.json().data;
+            const sent = insomnia.request.body.toString();
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+            insomnia.test('Raw body arrived byte-for-byte identical', () => {
+              insomnia.expect(data).to.eql(sent);
+            });
+
+            insomnia.test('CRLF line endings were not normalized to LF', () => {
+              insomnia.expect(data).to.include('\r\n');
+            });
+
+            insomnia.test('Mixed LF and CRLF both survived', () => {
+              insomnia.expect(data).to.match(/[^\r]\n/);
+            });
+
+            insomnia.test('Trailing tab was not trimmed', () => {
+              insomnia.expect(data.endsWith('\t')).to.be.true;
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 05 Template Tags - the actual gotcha
+    meta:
+      id: fld_05a1b2c3d4e5f60718293a4b5c6d7e8f
+      created: 1789000000000
+      modified: 1789054625166
+      sortKey: -1789000000500
+      description: >-
+        **Read this folder first if a customer reports "Insomnia is eating my
+        data".** Nine times out of ten it is this.
+
+
+        Insomnia renders request bodies through Nunjucks. Two sequences are
+        special:
+
+
+        - `{{ ... }}` - a variable or template tag - `{% ... %}` - a template
+        statement
+
+
+        If your legitimate data contains either, Insomnia tries to evaluate it
+        and substitutes it (or fails outright). Nothing is "stripped" - it is
+        being interpreted. There is no backslash-escape for this: `\{\{` is
+        neither valid JSON nor valid Nunjucks, and sending it produces a body
+        the server can't even parse. The one reliable fix, demonstrated in the
+        requests below, is:
+
+
+        Turn off **Settings -> Render Request Body** on that request. No
+        escaping needed - every brace goes out exactly as typed.
+
+
+        Note that single braces `{` `}` are completely fine, which is why normal
+        JSON is unaffected.
+    children:
+      - url: "{{ _.echo_url }}/post"
+        name: Curly braces WITH rendering on - watch it disappear
+        meta:
+          id: req_05aa1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: >-
+            Rendering is **on**. `single_braces` passes through untouched
+            because Nunjucks only reacts to the double forms `{{ }}` / `{% %}`.
+            `a_real_variable` is deliberately a real, unescaped variable
+            reference, and IS substituted - by design, not as a bug.
+
+
+            There is no backslash-escape for `{{ }}` in Insomnia's renderer -
+            `\{\{` is not valid JSON *or* valid Nunjucks, and sending it
+            produces a body the server can't even parse as JSON. If your data
+            genuinely contains literal double braces, the supported fix is the
+            next request in this folder: turn rendering off.
+          sortKey: -1789000000501
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "single_braces": "{ this is fine } and so is {}",
+              "a_real_variable": "{{ _.sample_special_value }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Single braces are never touched', () => {
+              insomnia.expect(echoed.single_braces).to.eql('{ this is fine } and so is {}');
+            });
+
+
+            insomnia.test('An unescaped variable IS substituted - by design', ()
+            => {
+              insomnia.expect(echoed.a_real_variable).to.eql('a-b_c,d.e ~!@#$%^&*()');
+              insomnia.expect(echoed.a_real_variable).to.not.include('{{');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Curly braces WITH rendering off - the fix
+        meta:
+          id: req_05bb1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: >-
+            Identical body, but **Settings -> Render Request Body is off**. No
+            escaping needed - every brace goes out exactly as typed, including
+            what looks like a variable reference.
+
+
+            This is the setting to point a customer at when their payload
+            genuinely contains `{{ }}` (Handlebars/Jinja templates, Vue
+            snippets, Grafana queries, and so on).
+          sortKey: -1789000000502
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "single_braces": "{ this is fine } and so is {}",
+              "double_braces": "{{ this_is_not_substituted }}",
+              "statement_syntax": "{% if x %}y{% endif %}",
+              "handlebars_template": "Hello {{name}}, your seat is {{seat_number}}",
+              "grafana_query": "sum(rate(http_requests_total{job=\"api\"}[5m]))",
+              "jsonata": "$.passengers[?(@.seat=='14C')]"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Double braces are sent verbatim, not substituted', ()
+            => {
+              insomnia.expect(echoed.double_braces).to.eql('{{ this_is_not_substituted }}');
+            });
+
+
+            insomnia.test('Template statement syntax is sent verbatim', () => {
+              insomnia.expect(echoed.statement_syntax).to.eql('{% if x %}y{% endif %}');
+            });
+
+
+            insomnia.test('A Handlebars template survives intact', () => {
+              insomnia.expect(echoed.handlebars_template).to.eql('Hello {{name}}, your seat is {{seat_number}}');
+            });
+
+
+            insomnia.test('A PromQL query with braces and brackets survives', ()
+            => {
+              insomnia.expect(echoed.grafana_query).to.eql('sum(rate(http_requests_total{job="api"}[5m]))');
+            });
+        settings:
+          renderRequestBody: false
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Environment variables holding special characters
+        meta:
+          id: req_05cc1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: "Proves the storage layer is clean too: these values live in the
+            **Base Environment**, full of punctuation and Unicode, and are
+            interpolated into a JSON body. Open the environment editor to see
+            them."
+          sortKey: -1789000000503
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "from_env_punctuation": "{{ _.sample_special_value }}",
+              "from_env_unicode": "{{ _.sample_unicode_value }}",
+              "from_env_json_ish": "{{ _.sample_jsonish_value }}",
+              "interpolated_inline": "prefix-{{ _.sample_special_value }}_suffix"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Punctuation stored in an env var survives', () => {
+              insomnia.expect(echoed.from_env_punctuation).to.eql('a-b_c,d.e ~!@#$%^&*()');
+            });
+
+
+            insomnia.test('Unicode stored in an env var survives', () => {
+              insomnia.expect(echoed.from_env_unicode).to.eql('Montr\u00E9al \u2708\uFE0F \u591A\u4F26\u591A \u2014 caf\u00E9');
+            });
+
+
+            insomnia.test('A JSON-looking env var is not re-parsed', () => {
+              insomnia.expect(echoed.from_env_json_ish).to.eql('{"a":1,"b":[2,3]}');
+            });
+
+
+            insomnia.test('Inline interpolation keeps surrounding text', () => {
+              insomnia.expect(echoed.interpolated_inline).to.eql('prefix-a-b_c,d.e ~!@#$%^&*()_suffix');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 06 Response Handling
+    meta:
+      id: fld_06a1b2c3d4e5f60718293a4b5c6d7e8f
+      created: 1789000000000
+      modified: 1789054644566
+      sortKey: -1789000000600
+      description: "The other half of the claim: can Insomnia **receive** and display
+        special characters. These request payloads that force the echo service
+        to return them, so you can eyeball the response pane and confirm the
+        preview renders correctly."
+    children:
+      - url: "{{ _.echo_url }}/post"
+        name: Response body full of Unicode - check the preview pane
+        meta:
+          id: req_06aa1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: Sends a heavy Unicode payload that comes straight back. Look at the
+            **Preview**, **Raw** and **JSON** response tabs - all three should
+            show identical text.
+          sortKey: -1789000000601
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "airports": [
+                { "code": "YUL", "city": "Montr\u00e9al", "note": "accents" },
+                { "code": "PEK", "city": "\u5317\u4eac", "note": "CJK" },
+                { "code": "DXB", "city": "\u062f\u0628\u064a", "note": "RTL" },
+                { "code": "TLV", "city": "\u05ea\u05dc \u05d0\u05d1\u05d9\u05d1", "note": "RTL" },
+                { "code": "BKK", "city": "\u0e01\u0e23\u0e38\u0e07\u0e40\u0e17\u0e1e", "note": "no word spaces" },
+                { "code": "ATH", "city": "\u0391\u03b8\u03ae\u03bd\u03b1", "note": "Greek" },
+                { "code": "SVO", "city": "\u041c\u043e\u0441\u043a\u0432\u0430", "note": "Cyrillic" }
+              ],
+              "status_icons": "\u2705 \u274c \u26a0\ufe0f \u2708\ufe0f \ud83e\uddf3 \ud83d\udd52",
+              "long_line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 \u2502 \u2514\u2500\u2500 \u251c\u2500\u2500 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+              "quote_styles": "\u201cdouble\u201d \u2018single\u2019 \u00abguillemets\u00bb \u201egerman\u201c",
+              "sentence": "Fl\u00fcge nach M\u00fcnchen \u2014 \u00e7a co\u00fbte 1\u202f234,56\u00a0\u20ac (\u00e0 peu pr\u00e8s)."
+            }
+        headers:
+          - name: Content-Type
+            value: application/json; charset=utf-8
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Response parses as UTF-8 JSON', () => {
+              insomnia.expect(echoed.airports.length).to.eql(7);
+            });
+
+
+            insomnia.test('Accented and CJK city names decoded correctly', () =>
+            {
+              insomnia.expect(echoed.airports[0].city).to.eql('Montr\u00E9al');
+              insomnia.expect(echoed.airports[1].city).to.eql('\u5317\u4EAC');
+            });
+
+
+            insomnia.test('RTL text decoded correctly', () => {
+              insomnia.expect(echoed.airports[2].city).to.eql('\u062F\u0628\u064A');
+            });
+
+
+            insomnia.test('Narrow and non-breaking spaces are preserved', () =>
+            {
+              insomnia.expect(echoed.sentence).to.include('\u202F');
+              insomnia.expect(echoed.sentence).to.include('\u00A0');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.echo_url }}/post"
+        name: Response with HTML and script-looking content
+        meta:
+          id: req_06bb1122334455667788990011223344
+          created: 1789000000000
+          modified: 1789000000000
+          isPrivate: false
+          description: Confirms the response viewer displays markup as **text** rather
+            than rendering or escaping it away. Useful when a customer says
+            angle brackets "vanish" - check they are not reading a rendered HTML
+            preview tab.
+          sortKey: -1789000000602
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "html": "<div class=\"row\" data-id='7'>Gate&nbsp;A-12 &amp; B-14</div>",
+              "script_tag": "<script>alert('not executed')</script>",
+              "entities": "&lt; &gt; &amp; &quot; &#39; &copy; &#x2708;",
+              "markdown": "# Heading\n- item _one_\n- item **two**\n`code -- here`",
+              "xml": "<?xml version=\"1.0\"?><root attr=\"a-b_c\"><child/></root>",
+              "regex": "^[A-Z]{2}-\\d{3}_(?:[a-z]+,)*[a-z]+$"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            const echoed = insomnia.response.json().json;
+
+            const sent = JSON.parse(insomnia.request.body.toString());
+
+
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+
+
+            insomnia.test('Markup round trips unmodified', () => {
+              insomnia.expect(echoed).to.deep.eql(sent);
+            });
+
+
+            insomnia.test('Angle brackets are not HTML-escaped', () => {
+              insomnia.expect(echoed.script_tag).to.eql("<script>alert('not executed')</script>");
+            });
+
+
+            insomnia.test('HTML entities are not decoded', () => {
+              insomnia.expect(echoed.entities).to.include('&amp;');
+            });
+
+
+            insomnia.test('A regex with braces and backslashes survives', () =>
+            {
+              insomnia.expect(echoed.regex).to.eql('^[A-Z]{2}-\\d{3}_(?:[a-z]+,)*[a-z]+$');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_5c4a1f0b9d2e4a7b8c6d5e3f2a1b0c9d
+    created: 1789000000000
+    modified: 1789054644565
+environments:
+  name: Base Environment
+  meta:
+    id: env_5c4a1f0b9d2e4a7b8c6d5e3f2a1b0c9d
+    created: 1789000000000
+    modified: 1789054644565
+    isPrivate: false
+  data:
+    echo_url: https://httpbin.org
+    sample_special_value: a-b_c,d.e ~!@#$%^&*()
+    sample_unicode_value: Montréal ✈️ 多伦多 — café
+    sample_jsonish_value: '{"a":1,"b":[2,3]}'
+    sample_quote_value: she said "hi" and 'bye'
+    sample_path_value: /api/v1/bookings?ref=AB-12_34&x=y
