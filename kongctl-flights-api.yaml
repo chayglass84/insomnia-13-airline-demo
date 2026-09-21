@@ -3,14 +3,15 @@
 # Konnect and applies only what changed, so re-running with an unchanged
 # version is a no-op instead of the 409 the old create-only curl call hit.
 #
-# openapi.yaml is written by the "Export OpenAPI spec via Inso CLI" step
-# earlier in the workflow; #info.version pulls the version string straight
-# out of it instead of us tracking it separately here.
+# openapi.json is written by the "Convert exported spec to JSON" step
+# earlier in the workflow (from Inso's YAML export — Konnect's version-create
+# endpoint rejected that YAML directly); #info.version pulls the version
+# string straight out of it instead of us tracking it separately here.
 apis:
   - ref: flights-api
     name: !env KONNECT_API_NAME
     versions:
       - ref: flights-version
-        version: !file ./openapi.yaml#info.version
+        version: !file ./openapi.json#info.version
         spec:
-          content: !file ./openapi.yaml
+          content: !file ./openapi.json

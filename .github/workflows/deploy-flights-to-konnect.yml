@@ -60,6 +60,28 @@ jobs:
             -o /var/temp/openapi.yaml \
             --ci
 
+      - name: Convert exported spec to JSON
+        run: |
+          # Konnect's version-create endpoint rejected the YAML content Inso
+          # writes ("content must be valid specification", a 400) even
+          # though it's valid OAS by spectral's own OAS ruleset — but a JSON
+          # rendering of this same spec published fine under the old
+          # curl-based workflow, so we convert to JSON to match what's known
+          # to work rather than debug Konnect's YAML parsing further.
+          python3 -c '
+          import datetime, json, yaml
+
+          def default(obj):
+              if isinstance(obj, (datetime.date, datetime.datetime)):
+                  return obj.isoformat()
+              raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+          with open("openapi.yaml") as f:
+              spec = yaml.safe_load(f)
+          with open("openapi.json", "w") as f:
+              json.dump(spec, f, default=default)
+          '
+
       - name: Lint the exported OpenAPI spec
         run: |
           # .spectral-flights-demo.yaml is a minimal demo ruleset (extends
