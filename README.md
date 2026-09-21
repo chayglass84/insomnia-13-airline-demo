@@ -59,6 +59,20 @@ The same Bookings spec, but with deliberately broken conventions (`create_bookin
 - **Collection Runner Example** — ten requests named `01 Request`…`10 Request` with intentionally scrambled `sortKey`s, each hitting a configurable delay endpoint with a passthrough test assertion. Built purely to demonstrate the Collection Runner executing requests in the correct order regardless of collection-view sort order.
 - **Collection Run with Data** — a single Flights request driven by `Sheet1.csv` (origin/destination pairs) via the Collection Runner's data-file feature. CSV headers must match environment variable names — that's the one gotcha worth calling out live.
 
+### Rewards Program — mock server + client (design-before-build)
+`rewards_program.yaml` (a **Mock Server**, not a collection) and `rewards_program_mock_client.yaml` (a plain collection that calls it) tell the "contract-first" story: backend and frontend agree on a shape, backend hasn't built the real service yet, frontend builds the UI against the mock in the meantime, and swaps the base URL later with no code changes if the contract held.
+
+- 15 routes across GET/POST/PATCH/DELETE and a spread of status codes (200/201/202/204/400/404/409/429) covering a plausible loyalty-points API: member CRUD, balance, transaction history, points earn/redeem, tiers, and a reward catalog.
+- A couple of routes use Insomnia's **dynamic mocking** — the response body is a Nunjucks template evaluated against the incoming request (`req.queryParams.x`), so the same route returns different bodies depending on the query string. See `GET /members/MBR123/balance` (`?tier=gold` vs. no param) and `POST /members/MBR123/points/redeem` (`?pointsRequested=too-many` vs. default) — the client collection has a request for each branch.
+- `GET /rewards/catalog/RWD123` is deliberately mocked as a 404, on the story-logic that this specific endpoint hasn't been built on the real backend either yet.
+- The client collection (`Rewards Program (Mock Client)`) has its own **collection-level Base Environment** — a second example of collection-scoped environments alongside Variable Inheritance above.
+- This is unrelated to the "Rewards" folder inside the Operations collection, which is a different, already-real API. Don't conflate the two live.
+- Routes use literal example IDs (`MBR123`, `RWD123`) rather than path-param placeholders like `{memberId}` — this local mock server's route editor rejects `{}` in the path as illegal characters. If you add more routes, stick to literal path segments.
+
+**Running it:** the mock server is backed by [insomnia-mockbin](https://github.com/Kong/insomnia-mockbin) (Kong's own backend for Insomnia's mock-server feature), a separate repo. Cameron runs it locally: clone it, `npm start`, and it listens on `localhost:7000`. It needs to be running before you send anything in `rewards_program_mock_client.yaml`.
+
+**Gotcha:** a local Insomnia mock server doesn't answer at the bare `localhost:7000/<route>` — it routes through `localhost:7000/bin/<mockServerId>/<route>`. The client collection's `base_url` already bakes that ID in; if you regenerate the mock server (new ID) you'll need to update `base_url` to match, or requests will 404 even though the routes look right in the app.
+
 ### MCP Flights
 Easiest to demo against Huggingface (http://huggingface.co/) or Notion (https://mcp.notion.com/mcp). Notion in particular supports DCR, which is a nice demo.
 
@@ -75,10 +89,12 @@ Needs a `KONNECT_TOKEN` repo secret to run; not required for anything else in th
 3. **MCP Flights** — same Production API, now exposed as MCP tools via Kong's MCP Proxy Plugin.
 4. **Linting Bookings** — spec governance with Spectral before anything ships.
 5. **Variable Inheritance / Security & Testing / Special Characters** — pull from these as needed for whatever specific mechanic (scoping, prompts, secrets, edge-case payloads) the audience cares about.
-6. **Collection Runner / Collection Run with Data** — wrap up with automated, data-driven execution across the requests you just showed.
+6. **Rewards Program mock** — if the audience cares about the design/build workflow (mocking APIs that don't exist yet), start `insomnia-mockbin` locally and run through a couple of the mock client requests, including one of the dynamic-mocking pairs.
+7. **Collection Runner / Collection Run with Data** — wrap up with automated, data-driven execution across the requests you just showed.
 
 ## Prerequisites
 - A recent Insomnia release (collections were authored against `12.5.1-alpha.0`; anything reasonably current should open them fine).
 - For the Vault-backed requests (in Baggage and Security & Testing) and the Konnect CI workflow, the relevant Kong Vault / Konnect credentials need to be configured — those are environment/account-level, not stored in this repo.
 - For MCP Flights, the target Kong Gateway instance needs the MCP Proxy Plugin enabled on the Flights service.
 - Insomnia has native Konnect integration — add your own organization from the org switcher in the top-left, using a Konnect PAT. Connecting your own org (rather than borrowing the demo author's) is the easiest way to show the Insomnia ⇄ Konnect relationship live, since you can then show specs/gateways landing in an org the audience knows is yours.
+- For the Rewards Program mock demo, [insomnia-mockbin](https://github.com/Kong/insomnia-mockbin) needs to be running locally (clone it, `npm start`, serves on `localhost:7000`) before the mock client requests will get anything back.

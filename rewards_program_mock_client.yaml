@@ -1,0 +1,228 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Rewards Program (Mock Client)
+meta:
+  id: wrk_e2ee084566b1ffaa62a21d53f74b1850
+  created: 1790002700000
+  modified: 1790002700000
+  description: |-
+    Frontend-side client for the Rewards Program mock server in
+    `rewards_program.yaml`. This is the other half of that demo's story:
+    a frontend dev builds and runs these requests against the mock at
+    `{{ _.base_url }}` while the real backend doesn't exist yet.
+
+    `base_url` includes the mock server's ID (`/bin/mock_.../`) --
+    Insomnia's local mock servers route through that path, plain
+    `localhost:7000/...` 404s. Start the mock server from Insomnia (or run
+    insomnia-mockbin locally, see the README) before sending these.
+collection:
+  - name: Rewards Program (Mock)
+    meta:
+      id: fld_dbb1f2de1830be01cfa153a612ddb7f1
+      created: 1790002700001
+      modified: 1790002700001
+      sortKey: -1790002700001
+      description: Requests exercising the mock server's verbs, status codes, and
+        dynamic (query-param-driven) responses.
+    children:
+      - url: "{{ _.base_url }}/members/MBR123"
+        name: Get member
+        meta:
+          id: req_5c33c0bebbb9d71c7d2a3d7aedbb18ba
+          created: 1790002700010
+          modified: 1790006047493
+          isPrivate: false
+          description: ""
+          sortKey: -1790002700010
+        method: GET
+        headers:
+          - name: Accept
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/members"
+        name: Create member (201)
+        meta:
+          id: req_0dce3bcc600c9f73cba551d08856fbfa
+          created: 1790002700020
+          modified: 1790002700020
+          isPrivate: false
+          description: ""
+          sortKey: -1790002700020
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "new.member@example.com",
+              "frequentFlyerNumber": "FF123456"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/members/MBR123/balance"
+        name: Get balance (default tier)
+        meta:
+          id: req_748780a0f7cd177787f20ad57cc81e67
+          created: 1790002700030
+          modified: 1790002700030
+          isPrivate: false
+          description: No query params -- mock falls back to the "silver" branch.
+          sortKey: -1790002700030
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/members/MBR123/balance?tier=gold"
+        name: Get balance (?tier=gold)
+        meta:
+          id: req_5dfc0508eb8d1a7d5d74735e9b2111b1
+          created: 1790002700040
+          modified: 1790002700040
+          isPrivate: false
+          description: |-
+            Same route as "Get balance (default tier)" -- the `?tier=gold`
+            query param flips the mock's Nunjucks conditional to the gold
+            branch. This is the dynamic-mocking example worth pointing at.
+          sortKey: -1790002700040
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/members/MBR123/points/redeem"
+        name: Redeem points (approved)
+        meta:
+          id: req_b69d1d746843f89e9f350bfafec10c13
+          created: 1790002700050
+          modified: 1790002700050
+          isPrivate: false
+          description: ""
+          sortKey: -1790002700050
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "rewardId": "rwd_001",
+              "points": 1200
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/members/MBR123/points/redeem?pointsRequested=too-many"
+        name: Redeem points (declined)
+        meta:
+          id: req_2805f8ab531ab6828c9f2c6c3a91e07d
+          created: 1790002700060
+          modified: 1790002700060
+          isPrivate: false
+          description: Same route, `?pointsRequested=too-many` flips the mock to the
+            DECLINED branch.
+          sortKey: -1790002700060
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "rewardId": "rwd_003",
+              "points": 25000
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/rewards/catalog"
+        name: List reward catalog
+        meta:
+          id: req_b65e8f9722d51dd2c4e91ea540a98e2b
+          created: 1790002700070
+          modified: 1790005792222
+          isPrivate: false
+          description: ""
+          sortKey: -1790002700070
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/rewards/catalog/RWD123"
+        name: Get reward by ID (404, not built yet)
+        meta:
+          id: req_dda9dea7af53693daf0ba88a895f9792
+          created: 1790002700080
+          modified: 1790002700080
+          isPrivate: false
+          description: Deliberately mocked as 404 -- this endpoint doesn't exist on the
+            real backend yet either.
+          sortKey: -1790002700080
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_b9bc815fc86031d438636e231581238b
+    created: 1790002700000
+    modified: 1790002700000
+environments:
+  name: Base Environment
+  meta:
+    id: env_455ba849ca56a33464c4bd47a08a8f2d
+    created: 1790002700000
+    modified: 1790002700000
+    isPrivate: false
+  data:
+    base_url: http://localhost:7000/bin/mock_1eb2a482e52e4d32b5799b03e9926935

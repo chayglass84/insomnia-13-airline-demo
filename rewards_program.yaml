@@ -4,23 +4,292 @@ name: Rewards Program
 meta:
   id: wrk_4d1b5c9077bd4851ad4c03688371a915
   created: 1790000395642
-  modified: 1790000575061
-  description: ""
+  modified: 1790002683229
+  description: |-
+    Mock server for a not-yet-built "Rewards Program" API.
+
+    Story: the backend and frontend devs agreed on this shape in a design
+    review, backend hasn't built the real service yet, and frontend is
+    building the UI against this mock in the meantime. Point the frontend
+    app at http://localhost:7000/bin/mock_1eb2a482e52e4d32b5799b03e9926935
+    today (see `rewards_program_mock_client.yaml`'s Base Environment --
+    the mock ID has to be in the path, plain localhost:7000 404s); swap it
+    for the real service's base URL later with zero code changes if the
+    contract holds.
+
+    A few routes use Insomnia's dynamic mocking (Nunjucks templating
+    against `req.queryParams`) to return different bodies for the same
+    route, e.g. GET /members/MBR123/balance?tier=gold vs no query
+    param at all — worth calling out live.
+
+    This is a separate, contrived API from the "Rewards" folder inside the
+    Operations collection (that one is the real, already-built
+    airline-ops loyalty API — miles credits/redemptions by `ffId`). Don't
+    confuse the two in a demo.
 server:
   meta:
     id: mock_1eb2a482e52e4d32b5799b03e9926935
     created: 1790000395677
-    modified: 1790000575060
+    modified: 1790002683229
   url: http://localhost:7000
   useInsomniaCloud: false
 routes:
-  - name: /cam
+  - name: /members/MBR123
     meta:
-      id: mock-route_9b88fa8fcb7142c39d9802cdee83e227
-      created: 1790000436054
-      modified: 1790000442148
-    body: '{"ntn":"B"}'
+      id: mock-route_b22e4f8ddf3e8783c6714b47f3ad182e
+      created: 1790002683215
+      modified: 1790006029257
+    body: >-
+      {
+        "memberId": "MBR123",
+        "firstName": "Alex",
+        "lastName": "Rivera",
+        "email": "alex.rivera@example.com",
+        "tier": "{% if req.queryParams.tier %}{{ req.queryParams.tier }}{% else %}silver{% endif %}",
+        "pointsBalance": 4820,
+        "enrolledAt": "2023-11-02T00:00:00Z"
+      }
     method: GET
     mimeType: application/json
     statusCode: 200
-    statusText: ""
+    statusText: OK
+  - name: /members
+    meta:
+      id: mock-route_848c444b207b63f85fe48bd845ad5f95
+      created: 1790002683216
+      modified: 1790002683216
+    body: |-
+      {
+        "memberId": "mem_new001",
+        "tier": "silver",
+        "pointsBalance": 0,
+        "enrolledAt": "2026-09-21T00:00:00Z"
+      }
+    headers:
+      - name: Location
+        value: /members/mem_new001
+    method: POST
+    mimeType: application/json
+    statusCode: 201
+    statusText: Created
+  - name: /members/MBR123
+    meta:
+      id: mock-route_379f90aef0770a18adf498b98f84a4bc
+      created: 1790002683217
+      modified: 1790002683217
+    body: |-
+      {
+        "memberId": "MBR123",
+        "firstName": "Alex",
+        "lastName": "Rivera-Chen",
+        "email": "alex.rivera@example.com",
+        "tier": "silver",
+        "pointsBalance": 4820,
+        "updatedAt": "2026-09-21T00:00:00Z"
+      }
+    method: PATCH
+    mimeType: application/json
+    statusCode: 200
+    statusText: OK
+  - name: /members/MBR123
+    meta:
+      id: mock-route_7b11d1921a0eefd0900af96b96ef7d14
+      created: 1790002683218
+      modified: 1790002683218
+    body: ""
+    method: DELETE
+    mimeType: application/json
+    statusCode: 204
+    statusText: No Content
+  - name: /members/validate
+    meta:
+      id: mock-route_7fc33409e3051df72ea1dbdf265bdde9
+      created: 1790002683219
+      modified: 1790002683219
+    body: >-
+      {
+        "error": "validation_failed",
+        "message": "Enrollment request is missing required fields.",
+        "fields": [
+          { "field": "email", "issue": "required" },
+          { "field": "frequentFlyerNumber", "issue": "must match ^FF[0-9]{6,10}$" }
+        ]
+      }
+    method: POST
+    mimeType: application/json
+    statusCode: 400
+    statusText: Bad Request
+  - name: /members/MBR123/balance
+    meta:
+      id: mock-route_535c5c11e78c7450a21d4af4f7b38281
+      created: 1790002683220
+      modified: 1790002683220
+    body: >-
+      {
+        "memberId": "MBR123",
+        "tier": "{% if req.queryParams.tier == 'gold' %}gold{% elif req.queryParams.tier == 'platinum' %}platinum{% else %}silver{% endif %}",
+        "pointsBalance": {% if req.queryParams.tier == 'gold' %}18400{% elif req.queryParams.tier == 'platinum' %}52100{% else %}4820{% endif %},
+        "pointsMultiplier": {% if req.queryParams.tier == 'gold' %}1.5{% elif req.queryParams.tier == 'platinum' %}2{% else %}1{% endif %}
+      }
+    method: GET
+    mimeType: application/json
+    statusCode: 200
+    statusText: OK
+  - name: /members/MBR123/transactions
+    meta:
+      id: mock-route_70ae1f80c7474ed679f63ccc52ead2f2
+      created: 1790002683221
+      modified: 1790002683221
+    body: >-
+      {
+        "memberId": "MBR123",
+        "transactions": [
+          { "id": "txn_001", "type": "EARN", "points": 480, "reason": "FLIGHT_FLOWN", "flightNumber": "IA204", "date": "2026-08-30T00:00:00Z" },
+          { "id": "txn_002", "type": "REDEEM", "points": -1200, "reason": "SEAT_UPGRADE", "date": "2026-09-02T00:00:00Z" },
+          { "id": "txn_003", "type": "EARN", "points": 220, "reason": "FLIGHT_FLOWN", "flightNumber": "IA118", "date": "2026-09-14T00:00:00Z" }
+        ]
+      }
+    method: GET
+    mimeType: application/json
+    statusCode: 200
+    statusText: OK
+  - name: /members/MBR123/transactions/export
+    meta:
+      id: mock-route_156c385b9f9ea91662264ef00d0d28d2
+      created: 1790002683222
+      modified: 1790002683222
+    body: |-
+      {
+        "error": "rate_limited",
+        "message": "Too many export requests. Retry after 30 seconds.",
+        "retryAfterSeconds": 30
+      }
+    headers:
+      - name: Retry-After
+        value: "30"
+    method: GET
+    mimeType: application/json
+    statusCode: 429
+    statusText: Too Many Requests
+  - name: /members/MBR123/points/earn
+    meta:
+      id: mock-route_7bd964060b1bb6f8c37f877668eac28d
+      created: 1790002683223
+      modified: 1790002683223
+    body: |-
+      {
+        "memberId": "MBR123",
+        "status": "PROCESSING",
+        "message": "Points will be credited within 24 hours."
+      }
+    method: POST
+    mimeType: application/json
+    statusCode: 202
+    statusText: Accepted
+  - name: /members/MBR123/points/redeem
+    meta:
+      id: mock-route_6598740441d2d03ef61a8035cf23ed2b
+      created: 1790002683224
+      modified: 1790002683224
+    body: |-
+      {% if req.queryParams.pointsRequested == 'too-many' %}
+      {
+        "status": "DECLINED",
+        "reason": "INSUFFICIENT_POINTS",
+        "memberId": "MBR123",
+        "pointsBalance": 4820
+      }
+      {% else %}
+      {
+        "status": "APPROVED",
+        "memberId": "MBR123",
+        "pointsRedeemed": 1200,
+        "pointsBalance": 3620
+      }
+      {% endif %}
+    method: POST
+    mimeType: application/json
+    statusCode: 200
+    statusText: OK
+  - name: /tiers
+    meta:
+      id: mock-route_3670a583e731b3b130c69cdb7f2d9f03
+      created: 1790002683225
+      modified: 1790002683225
+    body: |-
+      {
+        "tiers": [
+          { "name": "silver", "minPoints": 0, "pointsMultiplier": 1 },
+          { "name": "gold", "minPoints": 10000, "pointsMultiplier": 1.5 },
+          { "name": "platinum", "minPoints": 40000, "pointsMultiplier": 2 }
+        ]
+      }
+    method: GET
+    mimeType: application/json
+    statusCode: 200
+    statusText: OK
+  - name: /tiers/GOLD
+    meta:
+      id: mock-route_6b1b356fa63c5c3e914783074a4f4eb5
+      created: 1790002683226
+      modified: 1790002683226
+    body: >-
+      {% if req.queryParams.known == 'false' %}
+
+      { "error": "unknown_tier", "message": "That tier isn't recognized. Try
+      silver, gold, or platinum." }
+
+      {% else %}
+
+      { "name": "gold", "minPoints": 10000, "pointsMultiplier": 1.5 }
+
+      {% endif %}
+    method: GET
+    mimeType: application/json
+    statusCode: 200
+    statusText: OK
+  - name: /rewards/catalog
+    meta:
+      id: mock-route_bc8bcb10fe77a2f85fb4c7e8e434d8cd
+      created: 1790002683227
+      modified: 1790002683227
+    body: >-
+      {
+        "rewards": [
+          { "id": "rwd_001", "name": "Economy seat upgrade", "pointsCost": 1200 },
+          { "id": "rwd_002", "name": "Lounge access pass", "pointsCost": 3000 },
+          { "id": "rwd_003", "name": "Companion ticket", "pointsCost": 25000 }
+        ]
+      }
+    method: GET
+    mimeType: application/json
+    statusCode: 200
+    statusText: OK
+  - name: /rewards/catalog/RWD123
+    meta:
+      id: mock-route_de041c5666f99565ffd45cba370bc57d
+      created: 1790002683228
+      modified: 1790002683228
+    body: >-
+      {
+        "error": "not_implemented",
+        "message": "Single-reward lookup isn't built yet -- use GET /rewards/catalog for now."
+      }
+    method: GET
+    mimeType: application/json
+    statusCode: 404
+    statusText: Not Found
+  - name: /members/MBR123/enrollment
+    meta:
+      id: mock-route_b22e81ba316e8387595f4e58d027c3dd
+      created: 1790002683229
+      modified: 1790002683229
+    body: |-
+      {
+        "error": "already_enrolled",
+        "message": "Member MBR123 is already enrolled in the rewards program."
+      }
+    method: POST
+    mimeType: application/json
+    statusCode: 409
+    statusText: Conflict
