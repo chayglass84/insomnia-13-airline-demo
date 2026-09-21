@@ -19,15 +19,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
+      # Old approach (superseded by Inso CLI below, kept for reference):
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: "3.x"
+      # - name: Install dependencies
+      #   run: pip install pyyaml
+      # - name: Extract OpenAPI spec from Insomnia document
+      #   run: python3 .github/scripts/extract_openapi_spec.py flights.yaml openapi.json
 
-      - name: Install dependencies
-        run: pip install pyyaml
+      - name: Find the ApiSpec id in the Insomnia document
+        id: spec_id
+        run: |
+          set -euo pipefail
 
-      - name: Extract OpenAPI spec from Insomnia document
-        run: python3 .github/scripts/extract_openapi_spec.py flights.yaml openapi.json
+          # Inso needs an ApiSpec id (spc_...), not just a file path, to export
+          # cleanly — pointing it at the raw flights.yaml file makes it treat
+          # the whole Insomnia document (workspace, requests, etc.) as the
+          # spec root, which breaks $ref resolution for anything under
+          # components/schemas. The id lives at spec.meta.id in the doc, and
+          # is stable across edits to the spec content — it only changes if
+          # the spec is deleted and recreated in Insomnia — so we look it up
+          # here instead of hardcoding it, to avoid a silent break if that
+          # ever happens. There's exactly one spc_ id in the file (one
+          # ApiSpec per Insomnia document), so a plain grep is enough.
+          spec_id=$(grep -oE 'spc_[0-9a-f]+' flights.yaml | head -n1)
+          echo "Found ApiSpec id: $spec_id"
+          echo "spec_id=$spec_id" >> "$GITHUB_OUTPUT"
+
+      - name: Export OpenAPI spec via Inso CLI
+        env:
+          SPEC_ID: ${{ steps.spec_id.outputs.spec_id }}
+        run: |
+          # Inso always writes YAML regardless of the -o extension (tested:
+          # asking for openapi.json still produced YAML content), so we name
+          # the output file to match what it actually writes.
+          docker run --rm -v "$(pwd)":/var/temp kong/inso:latest \
+            export spec "$SPEC_ID" \
+            -w /var/temp/flights.yaml \
+            -o /var/temp/openapi.yaml \
+            --ci
 
       - name: Find or create API in Konnect API Catalog
         id: api
@@ -64,11 +95,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          version=$(python3 -c 'import json; print(json.load(open("openapi.json"))["info"]["version"])')
+          # openapi.yaml is plain YAML (see export step above), so pull the
+          # version out with a targeted grep instead of a full YAML parser.
+          version=$(grep -m1 '^  version:' openapi.yaml | sed -E "s/^  version:[[:space:]]*//; s/^['\"]//; s/['\"]\$//")
 
           payload=$(VERSION="$version" python3 -c '
           import json, os
-          spec_content = open("openapi.json").read()
+          spec_content = open("openapi.yaml").read()
           print(json.dumps({
               "version": os.environ["VERSION"],
               "spec": {"content": spec_content},
