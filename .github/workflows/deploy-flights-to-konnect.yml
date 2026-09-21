@@ -70,68 +70,84 @@ jobs:
             --ruleset /var/temp/.spectral-flights-demo.yaml \
             --ci
 
-      - name: Find or create API in Konnect API Catalog
-        id: api
+      # Old approach (superseded by kongctl below, kept for reference): two
+      # hand-rolled curl calls, one to find-or-create the API, one to POST a
+      # new version. The version POST was create-only, so re-running the
+      # workflow without bumping info.version always 409'd ("A version with
+      # this version string already exists for this API").
+      #
+      # - name: Find or create API in Konnect API Catalog
+      #   id: api
+      #   env:
+      #     KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+      #   run: |
+      #     set -euo pipefail
+      #     existing_id=$(curl -sS --fail-with-body \
+      #       -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+      #       -G "${KONNECT_API_BASE}/v3/apis" \
+      #       --data-urlencode "filter[name]=${KONNECT_API_NAME}" \
+      #       | python3 -c 'import json,sys; d=json.load(sys.stdin); items=d.get("data", []); print(items[0]["id"] if items else "")')
+      #     if [ -n "$existing_id" ]; then
+      #       echo "api_id=$existing_id" >> "$GITHUB_OUTPUT"
+      #     else
+      #       new_id=$(curl -sS --fail-with-body \
+      #         -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+      #         -H "Content-Type: application/json" \
+      #         -X POST "${KONNECT_API_BASE}/v3/apis" \
+      #         -d "$(python3 -c 'import json,os; print(json.dumps({"name": os.environ["KONNECT_API_NAME"]}))')" \
+      #         | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+      #       echo "api_id=$new_id" >> "$GITHUB_OUTPUT"
+      #     fi
+      #
+      # - name: Publish new API version with the OpenAPI spec
+      #   env:
+      #     KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+      #     API_ID: ${{ steps.api.outputs.api_id }}
+      #   run: |
+      #     set -euo pipefail
+      #     version=$(grep -m1 '^  version:' openapi.yaml | sed -E "s/^  version:[[:space:]]*//; s/^['\"]//; s/['\"]\$//")
+      #     payload=$(VERSION="$version" python3 -c '
+      #     import json, os
+      #     spec_content = open("openapi.yaml").read()
+      #     print(json.dumps({
+      #         "version": os.environ["VERSION"],
+      #         "spec": {"content": spec_content},
+      #     }))
+      #     ')
+      #     curl -sS --fail-with-body \
+      #       -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+      #       -H "Content-Type: application/json" \
+      #       -X POST "${KONNECT_API_BASE}/v3/apis/${API_ID}/versions" \
+      #       -d "$payload"
+
+      - name: Install kongctl
+        run: curl -fsSL https://get.konghq.com/kongctl | sh
+
+      - name: Apply Konnect API Catalog config via kongctl
         env:
-          KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+          KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}
         run: |
-          set -euo pipefail
-
-          existing_id=$(curl -sS --fail-with-body \
-            -H "Authorization: Bearer ${KONNECT_TOKEN}" \
-            -G "${KONNECT_API_BASE}/v3/apis" \
-            --data-urlencode "filter[name]=${KONNECT_API_NAME}" \
-            | python3 -c 'import json,sys; d=json.load(sys.stdin); items=d.get("data", []); print(items[0]["id"] if items else "")')
-
-          if [ -n "$existing_id" ]; then
-            echo "Found existing API: $existing_id"
-            echo "api_id=$existing_id" >> "$GITHUB_OUTPUT"
-          else
-            echo "No existing API found, creating one"
-            new_id=$(curl -sS --fail-with-body \
-              -H "Authorization: Bearer ${KONNECT_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -X POST "${KONNECT_API_BASE}/v3/apis" \
-              -d "$(python3 -c 'import json,os; print(json.dumps({"name": os.environ["KONNECT_API_NAME"]}))')" \
-              | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
-            echo "Created API: $new_id"
-            echo "api_id=$new_id" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Publish new API version with the OpenAPI spec
-        env:
-          KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
-          API_ID: ${{ steps.api.outputs.api_id }}
-        run: |
-          set -euo pipefail
-
-          # openapi.yaml is plain YAML (see export step above), so pull the
-          # version out with a targeted grep instead of a full YAML parser.
-          version=$(grep -m1 '^  version:' openapi.yaml | sed -E "s/^  version:[[:space:]]*//; s/^['\"]//; s/['\"]\$//")
-
-          payload=$(VERSION="$version" python3 -c '
-          import json, os
-          spec_content = open("openapi.yaml").read()
-          print(json.dumps({
-              "version": os.environ["VERSION"],
-              "spec": {"content": spec_content},
-          }))
-          ')
-
-          curl -sS --fail-with-body \
-            -H "Authorization: Bearer ${KONNECT_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -X POST "${KONNECT_API_BASE}/v3/apis/${API_ID}/versions" \
-            -d "$payload"
+          # kongctl is declarative: it diffs kongctl-flights-api.yaml against
+          # what's actually in the Konnect API Catalog and applies only the
+          # difference (create the API if missing, add/update the version if
+          # it differs). That's what fixes the 409 above — re-running with an
+          # unchanged version is a no-op instead of a duplicate-create error,
+          # and a changed version updates in place instead of needing a
+          # separate find-or-create step.
+          # --auto-approve skips the interactive confirmation prompt, which
+          # would otherwise hang the job in a non-interactive CI shell.
+          kongctl apply -f kongctl-flights-api.yaml --base-url "${KONNECT_API_BASE}" --auto-approve
 
 # ---------------------------------------------------------------------------
-# decK alternative (NOT USED, for reference only):
+# decK vs. kongctl (NOT USED — decK — for reference only):
 #
-# decK does not manage the Konnect API Catalog (the "APIs" / api_products
-# entity used above) — decK only manages Gateway configuration (services,
-# routes, consumers, plugins) and Konnect control planes declaratively. If
-# this API is later exposed through a Kong Gateway control plane and you
-# want to sync that gateway config as code, it would look like:
+# decK manages Kong Gateway configuration (services, routes, consumers,
+# plugins), on-prem or within a single Konnect control plane — it operates
+# one layer down from what this workflow needs. The Konnect API Catalog (the
+# "APIs" entity kongctl manages above) is a platform-level resource, not
+# gateway runtime config, so decK has no equivalent for it. If this API is
+# later exposed through a Kong Gateway control plane and you want to sync
+# *that* gateway config as code, it would look like:
 #
 #   - name: Install decK
 #     run: |
@@ -144,5 +160,5 @@ jobs:
 #       deck gateway sync kong.yaml --konnect-control-plane-name flights-cp
 #
 # That does NOT create/update an API Catalog entry, so it can't replace the
-# curl steps above for this task.
+# kongctl step above for this task.
 # ---------------------------------------------------------------------------

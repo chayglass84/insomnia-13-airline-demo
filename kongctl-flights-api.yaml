@@ -1,0 +1,16 @@
+# Declarative kongctl config for the Konnect API Catalog entry backing the
+# Flights & Airports API. kongctl diffs this against what's actually in
+# Konnect and applies only what changed, so re-running with an unchanged
+# version is a no-op instead of the 409 the old create-only curl call hit.
+#
+# openapi.yaml is written by the "Export OpenAPI spec via Inso CLI" step
+# earlier in the workflow; #info.version pulls the version string straight
+# out of it instead of us tracking it separately here.
+apis:
+  - ref: flights-api
+    name: !env KONNECT_API_NAME
+    versions:
+      - ref: flights-version
+        version: !file ./openapi.yaml#info.version
+        spec:
+          content: !file ./openapi.yaml
