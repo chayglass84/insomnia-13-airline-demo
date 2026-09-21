@@ -79,7 +79,13 @@ Easiest to demo against Huggingface (http://huggingface.co/) or Notion (https://
 Can also demo with what's here: An MCP client request pointed at `/mcp` on the **Production** (Kong Gateway) URL, using streamable-HTTP transport. This is talking to Kong's **MCP Proxy Plugin**, which exposes the Flights API as MCP tools — a strong "turn any REST API into an MCP server with Kong" demo. Must be run against Production; Dev/Staging don't have the plugin in front of them.
 
 ## CI: Publishing the Flights spec to Konnect
-`.github/workflows/deploy-flights-to-konnect.yml` triggers on any push to `flights.yaml` on `master`. It extracts the embedded OpenAPI spec (`.github/scripts/extract_openapi_spec.py`) and publishes it as a new version in the **Kong Konnect API Catalog**, creating the API entry if it doesn't already exist. Worth showing as a "docs/spec as code" story — edit the spec in Insomnia, commit, and Konnect's catalog stays current automatically. (The workflow file also has a commented-out note on why `decK` doesn't substitute for this — decK manages Gateway config, not the API Catalog.)
+`.github/workflows/deploy-flights-to-konnect.yml` triggers on any push to `flights.yaml` on `master` (or manually via `workflow_dispatch`). It's a small contract-first pipeline, worth demoing as a "docs/spec as code" story:
+
+1. **Export** — the [Inso CLI](https://developer.konghq.com/inso-cli/) (official Insomnia/Kong CLI, run via the `kong/inso` Docker image) pulls the embedded OpenAPI spec out of `flights.yaml` and converts it to JSON.
+2. **Lint** — Inso lints the exported spec against `.spectral-flights-demo.yaml`, a minimal Spectral ruleset (the standard OAS rules plus one custom rule requiring `info.contact.url`). A failing lint blocks the deploy — see that file's header comment for how to make it pass or fail on demand.
+3. **Publish** — [`kongctl`](https://developer.konghq.com/kongctl/) (Kong's declarative Konnect CLI) applies `kongctl-flights-api.yaml` against the **Kong Konnect API Catalog**, creating the API and/or its version if they don't already match what's declared. Being declarative fixes a real problem the original curl-based version had: re-running with an unchanged spec version is a no-op instead of a 409 conflict.
+
+The workflow file keeps all the "why" (including two now-superseded approaches, and why `decK` doesn't substitute for this — decK manages Gateway config, not the API Catalog) in a single `NOTES` block at the bottom, so the ~75-line pipeline above it can be shown on screen without scrolling.
 
 Needs a `KONNECT_TOKEN` repo secret to run; not required for anything else in this repo. That secret is a Konnect Personal Access Token tied to the demo author's org — if you fork this repo and want the workflow to publish into *your* Konnect org's API Catalog, generate your own PAT and set it as `KONNECT_TOKEN` on your fork.
 
