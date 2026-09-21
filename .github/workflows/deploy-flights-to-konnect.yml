@@ -1,7 +1,5 @@
 name: Deploy Flights spec to Kong Konnect API Catalog
 
-# Triggers on any change to flights.yaml (the Insomnia doc wrapping the
-# Flights & Airports OpenAPI spec) on the default branch.
 on:
   push:
     branches: [master]
@@ -19,30 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Old approach (superseded by Inso CLI below, kept for reference):
-      # - uses: actions/setup-python@v5
-      #   with:
-      #     python-version: "3.x"
-      # - name: Install dependencies
-      #   run: pip install pyyaml
-      # - name: Extract OpenAPI spec from Insomnia document
-      #   run: python3 .github/scripts/extract_openapi_spec.py flights.yaml openapi.json
-
       - name: Find the ApiSpec id in the Insomnia document
         id: spec_id
         run: |
-          set -euo pipefail
-
-          # Inso needs an ApiSpec id (spc_...), not just a file path, to export
-          # cleanly — pointing it at the raw flights.yaml file makes it treat
-          # the whole Insomnia document (workspace, requests, etc.) as the
-          # spec root, which breaks $ref resolution for anything under
-          # components/schemas. The id lives at spec.meta.id in the doc, and
-          # is stable across edits to the spec content — it only changes if
-          # the spec is deleted and recreated in Insomnia — so we look it up
-          # here instead of hardcoding it, to avoid a silent break if that
-          # ever happens. There's exactly one spc_ id in the file (one
-          # ApiSpec per Insomnia document), so a plain grep is enough.
           spec_id=$(grep -oE 'spc_[0-9a-f]+' flights.yaml | head -n1)
           echo "Found ApiSpec id: $spec_id"
           echo "spec_id=$spec_id" >> "$GITHUB_OUTPUT"
@@ -51,9 +28,6 @@ jobs:
         env:
           SPEC_ID: ${{ steps.spec_id.outputs.spec_id }}
         run: |
-          # Inso always writes YAML regardless of the -o extension (tested:
-          # asking for openapi.json still produced YAML content), so we name
-          # the output file to match what it actually writes.
           docker run --rm -v "$(pwd)":/var/temp kong/inso:latest \
             export spec "$SPEC_ID" \
             -w /var/temp/flights.yaml \
@@ -62,12 +36,6 @@ jobs:
 
       - name: Convert exported spec to JSON
         run: |
-          # Konnect's version-create endpoint rejected the YAML content Inso
-          # writes ("content must be valid specification", a 400) even
-          # though it's valid OAS by spectral's own OAS ruleset — but a JSON
-          # rendering of this same spec published fine under the old
-          # curl-based workflow, so we convert to JSON to match what's known
-          # to work rather than debug Konnect's YAML parsing further.
           python3 -c '
           import datetime, json, yaml
 
@@ -84,63 +52,10 @@ jobs:
 
       - name: Lint the exported OpenAPI spec
         run: |
-          # .spectral-flights-demo.yaml is a minimal demo ruleset (extends
-          # spectral:oas plus one rule requiring info.contact.url) — see that
-          # file for how to make this step pass or fail on demand.
           docker run --rm -v "$(pwd)":/var/temp kong/inso:latest \
             lint spec /var/temp/openapi.yaml \
             --ruleset /var/temp/.spectral-flights-demo.yaml \
             --ci
-
-      # Old approach (superseded by kongctl below, kept for reference): two
-      # hand-rolled curl calls, one to find-or-create the API, one to POST a
-      # new version. The version POST was create-only, so re-running the
-      # workflow without bumping info.version always 409'd ("A version with
-      # this version string already exists for this API").
-      #
-      # - name: Find or create API in Konnect API Catalog
-      #   id: api
-      #   env:
-      #     KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
-      #   run: |
-      #     set -euo pipefail
-      #     existing_id=$(curl -sS --fail-with-body \
-      #       -H "Authorization: Bearer ${KONNECT_TOKEN}" \
-      #       -G "${KONNECT_API_BASE}/v3/apis" \
-      #       --data-urlencode "filter[name]=${KONNECT_API_NAME}" \
-      #       | python3 -c 'import json,sys; d=json.load(sys.stdin); items=d.get("data", []); print(items[0]["id"] if items else "")')
-      #     if [ -n "$existing_id" ]; then
-      #       echo "api_id=$existing_id" >> "$GITHUB_OUTPUT"
-      #     else
-      #       new_id=$(curl -sS --fail-with-body \
-      #         -H "Authorization: Bearer ${KONNECT_TOKEN}" \
-      #         -H "Content-Type: application/json" \
-      #         -X POST "${KONNECT_API_BASE}/v3/apis" \
-      #         -d "$(python3 -c 'import json,os; print(json.dumps({"name": os.environ["KONNECT_API_NAME"]}))')" \
-      #         | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
-      #       echo "api_id=$new_id" >> "$GITHUB_OUTPUT"
-      #     fi
-      #
-      # - name: Publish new API version with the OpenAPI spec
-      #   env:
-      #     KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
-      #     API_ID: ${{ steps.api.outputs.api_id }}
-      #   run: |
-      #     set -euo pipefail
-      #     version=$(grep -m1 '^  version:' openapi.yaml | sed -E "s/^  version:[[:space:]]*//; s/^['\"]//; s/['\"]\$//")
-      #     payload=$(VERSION="$version" python3 -c '
-      #     import json, os
-      #     spec_content = open("openapi.yaml").read()
-      #     print(json.dumps({
-      #         "version": os.environ["VERSION"],
-      #         "spec": {"content": spec_content},
-      #     }))
-      #     ')
-      #     curl -sS --fail-with-body \
-      #       -H "Authorization: Bearer ${KONNECT_TOKEN}" \
-      #       -H "Content-Type: application/json" \
-      #       -X POST "${KONNECT_API_BASE}/v3/apis/${API_ID}/versions" \
-      #       -d "$payload"
 
       - name: Install kongctl
         run: curl -fsSL https://get.konghq.com/kongctl | sh
@@ -149,15 +64,6 @@ jobs:
         env:
           KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}
         run: |
-          # The Flights API in Konnect was originally created by the old
-          # curl steps above, before kongctl was involved. kongctl refuses
-          # to touch a resource it doesn't already manage, so without this
-          # it tries to CREATE a second API with the same name and Konnect
-          # rejects it (409, "API slug must be unique"). Adopting labels the
-          # existing API into kongctl's "default" namespace so `apply` below
-          # recognizes and updates it instead. Safe to leave in permanently:
-          # once adopted, re-adopting into the same namespace is a no-op we
-          # don't need to fail the job over, so we swallow any error here.
           kongctl adopt api "${KONNECT_API_NAME}" --namespace default --base-url "${KONNECT_API_BASE}" \
             || echo "Adopt reported an issue (likely already adopted) — continuing."
 
@@ -165,27 +71,139 @@ jobs:
         env:
           KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}
         run: |
-          # kongctl is declarative: it diffs kongctl-flights-api.yaml against
-          # what's actually in the Konnect API Catalog and applies only the
-          # difference (create the API if missing, add/update the version if
-          # it differs). That's what fixes the 409 above — re-running with an
-          # unchanged version is a no-op instead of a duplicate-create error,
-          # and a changed version updates in place instead of needing a
-          # separate find-or-create step.
-          # --auto-approve skips the interactive confirmation prompt, which
-          # would otherwise hang the job in a non-interactive CI shell.
           kongctl apply -f kongctl-flights-api.yaml --base-url "${KONNECT_API_BASE}" --auto-approve
 
-# ---------------------------------------------------------------------------
-# decK vs. kongctl (NOT USED — decK — for reference only):
+# =============================================================================
+# NOTES — background/rationale for the steps above, not needed to read the
+# pipeline itself. Kept here so it's all in one place instead of scattered
+# inline, for demoing the ~50 lines above as one clean unit.
+# =============================================================================
 #
+# Trigger: fires on any push to flights.yaml (the Insomnia doc wrapping the
+# Flights & Airports OpenAPI spec) on master, or manually via
+# workflow_dispatch.
+#
+# --- Find the ApiSpec id in the Insomnia document ---
+# Inso needs an ApiSpec id (spc_...), not just a file path, to export
+# cleanly — pointing it at the raw flights.yaml file makes it treat the
+# whole Insomnia document (workspace, requests, etc.) as the spec root,
+# which breaks $ref resolution for anything under components/schemas. The
+# id lives at spec.meta.id in the doc, and is stable across edits to the
+# spec content — it only changes if the spec is deleted and recreated in
+# Insomnia — so we look it up here instead of hardcoding it. There's
+# exactly one spc_ id in the file (one ApiSpec per Insomnia document), so a
+# plain grep is enough.
+#
+# --- Export OpenAPI spec via Inso CLI ---
+# Inso always writes YAML regardless of the -o extension (tested: asking
+# for openapi.json still produced YAML content), so we name the output
+# file to match what it actually writes.
+#
+# --- Convert exported spec to JSON ---
+# Konnect's version-create endpoint rejected the YAML content Inso writes
+# ("content must be valid specification", a 400) even though it's valid
+# OAS by spectral's own OAS ruleset — but a JSON rendering of this same
+# spec published fine under the old curl-based workflow (see below), so we
+# convert to JSON to match what's known to work.
+#
+# --- Lint the exported OpenAPI spec ---
+# .spectral-flights-demo.yaml is a minimal demo ruleset (extends
+# spectral:oas plus one rule requiring info.contact.url) — see that file
+# for how to make this step pass or fail on demand.
+#
+# --- Adopt the existing Konnect API into kongctl management ---
+# The Flights API in Konnect was originally created by the old curl steps
+# below, before kongctl was involved. kongctl refuses to touch a resource
+# it doesn't already manage, so without this it tries to CREATE a second
+# API with the same name and Konnect rejects it (409, "API slug must be
+# unique"). Adopting labels the existing API into kongctl's "default"
+# namespace so `apply` below recognizes and updates it instead. Safe to
+# leave in permanently: once adopted, re-adopting into the same namespace
+# is a no-op we don't need to fail the job over, so we swallow any error
+# here.
+#
+# --- Apply Konnect API Catalog config via kongctl ---
+# kongctl is declarative: it diffs kongctl-flights-api.yaml (see that
+# file's own notes, including a double-content-wrapping bug we hit and
+# fixed) against what's actually in the Konnect API Catalog and applies
+# only the difference (create the API if missing, add/update the version
+# if it differs). That's what fixes the 409 described below — re-running
+# with an unchanged version is a no-op instead of a duplicate-create
+# error, and a changed version updates in place instead of needing a
+# separate find-or-create step. --auto-approve skips the interactive
+# confirmation prompt, which would otherwise hang the job in a
+# non-interactive CI shell.
+#
+# --- Old approach #1 (superseded by kongctl above) ---
+# Two hand-rolled curl calls, one to find-or-create the API, one to POST a
+# new version. The version POST was create-only, so re-running the
+# workflow without bumping info.version always 409'd ("A version with this
+# version string already exists for this API").
+#
+# - name: Find or create API in Konnect API Catalog
+#   id: api
+#   env:
+#     KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+#   run: |
+#     set -euo pipefail
+#     existing_id=$(curl -sS --fail-with-body \
+#       -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+#       -G "${KONNECT_API_BASE}/v3/apis" \
+#       --data-urlencode "filter[name]=${KONNECT_API_NAME}" \
+#       | python3 -c 'import json,sys; d=json.load(sys.stdin); items=d.get("data", []); print(items[0]["id"] if items else "")')
+#     if [ -n "$existing_id" ]; then
+#       echo "api_id=$existing_id" >> "$GITHUB_OUTPUT"
+#     else
+#       new_id=$(curl -sS --fail-with-body \
+#         -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+#         -H "Content-Type: application/json" \
+#         -X POST "${KONNECT_API_BASE}/v3/apis" \
+#         -d "$(python3 -c 'import json,os; print(json.dumps({"name": os.environ["KONNECT_API_NAME"]}))')" \
+#         | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+#       echo "api_id=$new_id" >> "$GITHUB_OUTPUT"
+#     fi
+#
+# - name: Publish new API version with the OpenAPI spec
+#   env:
+#     KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+#     API_ID: ${{ steps.api.outputs.api_id }}
+#   run: |
+#     set -euo pipefail
+#     version=$(grep -m1 '^  version:' openapi.yaml | sed -E "s/^  version:[[:space:]]*//; s/^['\"]//; s/['\"]\$//")
+#     payload=$(VERSION="$version" python3 -c '
+#     import json, os
+#     spec_content = open("openapi.yaml").read()
+#     print(json.dumps({
+#         "version": os.environ["VERSION"],
+#         "spec": {"content": spec_content},
+#     }))
+#     ')
+#     curl -sS --fail-with-body \
+#       -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+#       -H "Content-Type: application/json" \
+#       -X POST "${KONNECT_API_BASE}/v3/apis/${API_ID}/versions" \
+#       -d "$payload"
+#
+# --- Old approach #2 (superseded by Inso CLI above) ---
+# A Python/pyyaml script (.github/scripts/extract_openapi_spec.py) that
+# parsed flights.yaml directly and pulled out doc["spec"]["contents"]:
+#
+#   - uses: actions/setup-python@v5
+#     with:
+#       python-version: "3.x"
+#   - name: Install dependencies
+#     run: pip install pyyaml
+#   - name: Extract OpenAPI spec from Insomnia document
+#     run: python3 .github/scripts/extract_openapi_spec.py flights.yaml openapi.json
+#
+# --- decK vs. kongctl (NOT USED — decK) ---
 # decK manages Kong Gateway configuration (services, routes, consumers,
 # plugins), on-prem or within a single Konnect control plane — it operates
-# one layer down from what this workflow needs. The Konnect API Catalog (the
-# "APIs" entity kongctl manages above) is a platform-level resource, not
-# gateway runtime config, so decK has no equivalent for it. If this API is
-# later exposed through a Kong Gateway control plane and you want to sync
-# *that* gateway config as code, it would look like:
+# one layer down from what this workflow needs. The Konnect API Catalog
+# (the "APIs" entity kongctl manages above) is a platform-level resource,
+# not gateway runtime config, so decK has no equivalent for it. If this
+# API is later exposed through a Kong Gateway control plane and you want
+# to sync *that* gateway config as code, it would look like:
 #
 #   - name: Install decK
 #     run: |
@@ -197,6 +215,6 @@ jobs:
 #     run: |
 #       deck gateway sync kong.yaml --konnect-control-plane-name flights-cp
 #
-# That does NOT create/update an API Catalog entry, so it can't replace the
-# kongctl step above for this task.
-# ---------------------------------------------------------------------------
+# That does NOT create/update an API Catalog entry, so it can't replace
+# the kongctl step above for this task.
+# =============================================================================
