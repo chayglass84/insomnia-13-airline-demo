@@ -1,0 +1,26 @@
+type: mock.insomnia.rest/5.0
+schema_version: "5.1"
+name: Rewards Program
+meta:
+  id: wrk_4d1b5c9077bd4851ad4c03688371a915
+  created: 1790000395642
+  modified: 1790000575061
+  description: ""
+server:
+  meta:
+    id: mock_1eb2a482e52e4d32b5799b03e9926935
+    created: 1790000395677
+    modified: 1790000575060
+  url: http://localhost:7000
+  useInsomniaCloud: false
+routes:
+  - name: /cam
+    meta:
+      id: mock-route_9b88fa8fcb7142c39d9802cdee83e227
+      created: 1790000436054
+      modified: 1790000442148
+    body: '{"ntn":"B"}'
+    method: GET
+    mimeType: application/json
+    statusCode: 200
+    statusText: ""

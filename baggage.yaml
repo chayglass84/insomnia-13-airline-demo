@@ -293,7 +293,7 @@ collection:
         meta:
           id: req_1f87e9944aba48e992399baa002e346e
           created: 1778268657030
-          modified: 1788989352392
+          modified: 1789409859039
           isPrivate: false
           description: |-
             Returns bags currently assigned to a given flight instance. Used by
@@ -312,7 +312,8 @@ collection:
             description: ""
             disabled: false
           - name: ""
-            value: "{% vault 'aws', '', '{}' %}"
+            value: "{% vault 'aws', 'externalVaultTag_01848b8e1c7f4e7c8d767a72bc03a0af',
+              '{}' %}"
             description: ""
             disabled: false
         scripts:
@@ -1603,4 +1604,4 @@ spec:
   meta:
     id: spc_a843f4922ef248898e4eea7acd4c11fa
     created: 1778268014675
-    modified: 1788918029080
+    modified: 1789570703489
