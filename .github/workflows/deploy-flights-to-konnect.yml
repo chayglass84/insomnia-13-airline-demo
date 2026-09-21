@@ -60,6 +60,16 @@ jobs:
             -o /var/temp/openapi.yaml \
             --ci
 
+      - name: Lint the exported OpenAPI spec
+        run: |
+          # .spectral-flights-demo.yaml is a minimal demo ruleset (extends
+          # spectral:oas plus one rule requiring info.contact.url) — see that
+          # file for how to make this step pass or fail on demand.
+          docker run --rm -v "$(pwd)":/var/temp kong/inso:latest \
+            lint spec /var/temp/openapi.yaml \
+            --ruleset /var/temp/.spectral-flights-demo.yaml \
+            --ci
+
       - name: Find or create API in Konnect API Catalog
         id: api
         env:

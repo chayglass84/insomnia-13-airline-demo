@@ -1,0 +1,16 @@
+# Minimal Spectral ruleset used only to demo the lint gate in
+# .github/workflows/deploy-flights-to-konnect.yml. Deliberately just one
+# rule on top of the standard OAS ruleset, so the pass/fail state is easy
+# to control live: the Flights spec currently has no info.contact.url,
+# so this fails out of the box. Add a url under info.contact in
+# flights.yaml to make it pass.
+extends: spectral:oas
+rules:
+  info-contact-url-required:
+    description: The info.contact object must include a url field.
+    message: "info.contact is missing a url — add a link to the team's docs or support page."
+    severity: error
+    given: $.info.contact
+    then:
+      field: url
+      function: truthy
