@@ -174,7 +174,11 @@ jobs:
           # separate find-or-create step.
           # --auto-approve skips the interactive confirmation prompt, which
           # would otherwise hang the job in a non-interactive CI shell.
-          kongctl apply -f kongctl-flights-api.yaml --base-url "${KONNECT_API_BASE}" --auto-approve
+          # --log-level debug temporarily, to see the actual request body
+          # kongctl sends — Konnect's 400 doesn't say what's wrong with the
+          # content, and the content itself passes strict OAS 3.0 schema
+          # validation locally, so something in-transit is suspect.
+          kongctl apply -f kongctl-flights-api.yaml --base-url "${KONNECT_API_BASE}" --auto-approve --log-level debug
 
 # ---------------------------------------------------------------------------
 # decK vs. kongctl (NOT USED — decK — for reference only):
