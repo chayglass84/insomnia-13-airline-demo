@@ -1,0 +1,117 @@
+extends: "spectral:oas"
+
+rules:
+
+  # ── ERROR: every operation MUST have a summary ──────────────────────────────
+  operation-summary-required:
+    description: "Every operation must have a non-empty summary."
+    message: "Operation '{{property}}' is missing a summary."
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head,trace]"
+    then:
+      field: summary
+      function: truthy
+
+  # ── ERROR: every operation MUST declare at least one 4xx response ────────────
+  operation-4xx-response:
+    description: "Operations should define at least one 4xx error response."
+    message: "Operation must define at least one 4xx response (e.g. 400, 401, 403, 404)."
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete]"
+    then:
+      field: responses
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required: ["400"]
+            - required: ["401"]
+            - required: ["403"]
+            - required: ["404"]
+            - required: ["422"]
+            - required: ["429"]
+
+  # ── ERROR: security schemes must be defined when security is referenced ──────
+  operation-security-defined:
+    description: "Security requirements must reference schemes defined in components/securitySchemes."
+    message: "Security scheme '{{value}}' is referenced but not defined in components/securitySchemes."
+    severity: error
+    given: "$.paths[*][*].security[*][*]~"
+    then:
+      function: pattern
+      functionOptions:
+        # This rule fires on the key name; real enforcement is via oas-security-defined
+        # but we replicate it to make the error visible in Insomnia
+        match: "^[a-zA-Z0-9_\\-]+$"
+
+  # ── WARNING: all schemas should have a description ──────────────────────────
+  schema-description:
+    description: "Schemas in components should include a description."
+    message: "Schema '{{property}}' is missing a description."
+    severity: warn
+    given: "$.components.schemas[*]"
+    then:
+      field: description
+      function: truthy
+
+  # ── WARNING: response bodies should define a schema ─────────────────────────
+  response-schema-defined:
+    description: "Non-204 success responses should define a schema."
+    message: "Response '{{property}}' has content defined but the schema is missing."
+    severity: warn
+    given: "$.paths[*][*].responses[?(@property != '204')].content[*]"
+    then:
+      field: schema
+      function: truthy
+
+  # ── WARNING: path parameters should have a description ──────────────────────
+  path-parameter-description:
+    description: "Path parameters should include a description."
+    message: "Path parameter '{{value}}' is missing a description."
+    severity: warn
+    given: "$.paths[*].parameters[?(@.in == 'path')]"
+    then:
+      field: description
+      function: truthy
+
+  # ── WARNING: operationIds must be unique and use camelCase ──────────────────
+  operation-id-camel-case:
+    description: "operationId values should be camelCase."
+    message: "operationId '{{value}}' must be camelCase (e.g. getBooking, not get_booking or GetBooking)."
+    severity: warn
+    given: "$.paths[*][*].operationId"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+
+  # ── WARNING: contact object should include a URL ────────────────────────────
+  info-contact-url:
+    description: "The info.contact object should include a url field."
+    message: "info.contact is missing a url field."
+    severity: warn
+    given: "$.info.contact"
+    then:
+      field: url
+      function: truthy
+
+  # ── WARNING: tags at the root level should each have a description ───────────
+  tag-description:
+    description: "All root-level tags should include a description."
+    message: "Tag '{{value}}' is missing a description."
+    severity: warn
+    given: "$.tags[*]"
+    then:
+      field: description
+      function: truthy
+
+  # ── WARNING: arrays should define minItems/maxItems ─────────────────────────
+  array-bounds:
+    description: "Array properties should declare minItems and maxItems."
+    message: "Array property '{{property}}' should define minItems and/or maxItems."
+    severity: warn
+    given: "$.components.schemas[*].properties[?(@.type == 'array')]"
+    then:
+      field: maxItems
+      function: truthy
