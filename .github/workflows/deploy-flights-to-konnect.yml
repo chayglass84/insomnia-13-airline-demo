@@ -123,6 +123,22 @@ jobs:
       - name: Install kongctl
         run: curl -fsSL https://get.konghq.com/kongctl | sh
 
+      - name: Adopt the existing Konnect API into kongctl management
+        env:
+          KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}
+        run: |
+          # The Flights API in Konnect was originally created by the old
+          # curl steps above, before kongctl was involved. kongctl refuses
+          # to touch a resource it doesn't already manage, so without this
+          # it tries to CREATE a second API with the same name and Konnect
+          # rejects it (409, "API slug must be unique"). Adopting labels the
+          # existing API into kongctl's "default" namespace so `apply` below
+          # recognizes and updates it instead. Safe to leave in permanently:
+          # once adopted, re-adopting into the same namespace is a no-op we
+          # don't need to fail the job over, so we swallow any error here.
+          kongctl adopt api "${KONNECT_API_NAME}" --namespace default --base-url "${KONNECT_API_BASE}" \
+            || echo "Adopt reported an issue (likely already adopted) — continuing."
+
       - name: Apply Konnect API Catalog config via kongctl
         env:
           KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}

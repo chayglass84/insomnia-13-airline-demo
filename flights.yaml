@@ -547,7 +547,7 @@ spec:
         the Operations team and is **not** in scope for this API — see the
         Operations collection. Bookings and baggage also live in their own
         specs.
-      version: 1.0.1
+      version: 1.0.2
       contact:
         name: Insomnia Airlines API Team
         email: api-support@insomnia-airlines.example
