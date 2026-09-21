@@ -7,11 +7,20 @@
 # earlier in the workflow (from Inso's YAML export — Konnect's version-create
 # endpoint rejected that YAML directly); #info.version pulls the version
 # string straight out of it instead of us tracking it separately here.
+#
+# `spec: !file ./openapi.json` (not `spec: { content: !file ... }`) is
+# deliberate: kongctl's !file tag on the spec field already wraps the loaded
+# file into { content: <raw text> } for you. Nesting it under an explicit
+# content: key double-wrapped it, so Konnect received spec.content as the
+# literal string '{"content": {...the real spec...}}' and rejected it with
+# a generic "content must be valid specification" — confirmed by dumping
+# kongctl's resolved plan and comparing against a raw curl POST of the same
+# openapi.json, which Konnect accepted (it got far enough to check the
+# version field, rejecting only a deliberately mismatched test value).
 apis:
   - ref: flights-api
     name: !env KONNECT_API_NAME
     versions:
       - ref: flights-version
         version: !file ./openapi.json#info.version
-        spec:
-          content: !file ./openapi.json
+        spec: !file ./openapi.json

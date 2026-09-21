@@ -161,22 +161,6 @@ jobs:
           kongctl adopt api "${KONNECT_API_NAME}" --namespace default --base-url "${KONNECT_API_BASE}" \
             || echo "Adopt reported an issue (likely already adopted) — continuing."
 
-      - name: DIAGNOSTIC - dump kongctl's resolved plan
-        continue-on-error: true
-        env:
-          KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}
-        run: |
-          # The raw curl test (previous iteration of this diagnostic) proved
-          # Konnect accepts this exact openapi.json content — it got far
-          # enough to check version-vs-content match and only complained
-          # about a deliberately mismatched throwaway version. So kongctl's
-          # generic "content must be valid specification" must mean the
-          # *version* field it resolved via !file ./openapi.json#info.version
-          # isn't the plain "1.0.2" we expect. Dumping the plan to see the
-          # literal resolved value.
-          kongctl plan -f kongctl-flights-api.yaml --base-url "${KONNECT_API_BASE}" --output-file plan.json
-          cat plan.json
-
       - name: Apply Konnect API Catalog config via kongctl
         env:
           KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}
@@ -190,11 +174,7 @@ jobs:
           # separate find-or-create step.
           # --auto-approve skips the interactive confirmation prompt, which
           # would otherwise hang the job in a non-interactive CI shell.
-          # --log-level debug temporarily, to see the actual request body
-          # kongctl sends — Konnect's 400 doesn't say what's wrong with the
-          # content, and the content itself passes strict OAS 3.0 schema
-          # validation locally, so something in-transit is suspect.
-          kongctl apply -f kongctl-flights-api.yaml --base-url "${KONNECT_API_BASE}" --auto-approve --log-level debug
+          kongctl apply -f kongctl-flights-api.yaml --base-url "${KONNECT_API_BASE}" --auto-approve
 
 # ---------------------------------------------------------------------------
 # decK vs. kongctl (NOT USED — decK — for reference only):
