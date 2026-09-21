@@ -161,6 +161,36 @@ jobs:
           kongctl adopt api "${KONNECT_API_NAME}" --namespace default --base-url "${KONNECT_API_BASE}" \
             || echo "Adopt reported an issue (likely already adopted) — continuing."
 
+      - name: DIAGNOSTIC - raw curl POST with the same openapi.json content
+        continue-on-error: true
+        env:
+          KONNECT_TOKEN: ${{ secrets.KONNECT_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Isolating whether Konnect rejects this exact content regardless
+          # of client, or whether it's specific to how kongctl sends it.
+          # Uses a throwaway version string so it can't collide with
+          # anything real. Not meant to stay in the workflow.
+          api_id=$(curl -sS --fail-with-body \
+            -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+            -G "${KONNECT_API_BASE}/v3/apis" \
+            --data-urlencode "filter[name]=${KONNECT_API_NAME}" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["data"][0]["id"])')
+          echo "api_id=$api_id"
+          payload=$(python3 -c '
+          import json
+          spec_content = open("openapi.json").read()
+          print(json.dumps({
+              "version": "0.0.1-diagnostic",
+              "spec": {"content": spec_content},
+          }))
+          ')
+          curl -sS -w "\nHTTP_STATUS=%{http_code}\n" \
+            -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -X POST "${KONNECT_API_BASE}/v3/apis/${api_id}/versions" \
+            -d "$payload" || true
+
       - name: Apply Konnect API Catalog config via kongctl
         env:
           KONGCTL_DEFAULT_KONNECT_PAT: ${{ secrets.KONNECT_TOKEN }}
