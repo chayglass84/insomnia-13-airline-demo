@@ -11,9 +11,10 @@ environments:
   meta:
     id: env_fd4df06d094a0ae36506ef56850c97d10a978188
     created: 1778268347067
-    modified: 1788988939093
+    modified: 1790174654958
     isPrivate: false
   data:
     base_url: https://insomnia-airlines-api.onrender.com
     origin: ""
     destination: ""
+    apikey: ""

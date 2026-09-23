@@ -11,7 +11,8 @@ environments:
   meta:
     id: env_f77d857e60ce4a3eb0a626ff95f145e9
     created: 1778268347067
-    modified: 1778531998213
+    modified: 1790174658701
     isPrivate: false
   data:
     base_url: https://2110842ae3.us.serverless.gateways.konggateway.com
+    apikey: nzIXKd8rxrOcIXEmhrFyXarcj8kYq4NX

@@ -40,6 +40,10 @@ collection:
               eXBlIjoia3YiLCJTZWNyZXRLZXkiOiJjYW1zX21hZ2ljX3Bhc3N3b3JkIn0=' %}"
             description: ""
             disabled: false
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -68,6 +72,11 @@ collection:
             reference it.
           sortKey: -1778267676046
         method: DELETE
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -86,6 +95,11 @@ collection:
           description: Returns details for a single airport.
           sortKey: -1778267676046
         method: GET
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -127,6 +141,10 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -164,6 +182,10 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: >-
             insomnia.test('Status is 201', () => {
@@ -186,16 +208,16 @@ collection:
     meta:
       id: fld_0f6df53267ad419ba33cb266808c9852
       created: 1778267676045
-      modified: 1789570836057
+      modified: 1790173960386
       sortKey: -1778267676045
       description: Specific scheduled flight instances on a given date.
     children:
-      - url: "{{ _.base_url }}/flights/?a=b"
+      - url: "{{ _.base_url }}/flights"
         name: List flights.
         meta:
           id: req_4afdb49a01db4bba814efb7a8b08074c
           created: 1778267676048
-          modified: 1788987675471
+          modified: 1790173924911
           isPrivate: false
           description: >-
             Returns scheduled flight instances. Filters allow narrowing by date,
@@ -221,6 +243,11 @@ collection:
             disabled: true
           - name: limit
             value: "2"
+            disabled: true
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
             disabled: false
         scripts:
           afterResponse: >-
@@ -268,6 +295,10 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
@@ -296,6 +327,11 @@ collection:
             on the given departure date.
           sortKey: -1778267676048
         method: GET
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -343,6 +379,10 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -367,6 +407,11 @@ collection:
             to `CANCELLED`.
           sortKey: -1778267676049
         method: DELETE
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -379,7 +424,7 @@ collection:
     meta:
       id: fld_78432cf4c48f413383f228efc660c5cc
       created: 1778267676045
-      modified: 1788897802217
+      modified: 1790174658704
       sortKey: -1778267676045
       description: Published city-pairs the airline operates between.
     children:
@@ -407,6 +452,11 @@ collection:
           - name: destination
             value: string
             disabled: true
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -447,6 +497,10 @@ collection:
           - name: Content-Type
             value: application/json
             disabled: false
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 201', () => {
@@ -476,6 +530,11 @@ collection:
             still reference it.
           sortKey: -1778267676048
         method: DELETE
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         settings:
           renderRequestBody: true
           encodeUrl: true
@@ -497,6 +556,11 @@ collection:
           description: Returns details for a single published route.
           sortKey: -1778267676048
         method: GET
+        headers:
+          - name: apikey
+            value: "{{apikey}}"
+            description: ""
+            disabled: false
         scripts:
           afterResponse: |-
             insomnia.test('Status is 200', () => {
@@ -519,13 +583,13 @@ cookieJar:
   meta:
     id: jar_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774014
-    modified: 1789570836055
+    modified: 1790174658700
 environments:
   name: Base Environment
   meta:
     id: env_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
     created: 1778266774013
-    modified: 1789570836055
+    modified: 1790174658700
     isPrivate: false
 spec:
   contents:
