@@ -611,7 +611,7 @@ spec:
         the Operations team and is **not** in scope for this API — see the
         Operations collection. Bookings and baggage also live in their own
         specs.
-      version: 1.0.3
+      version: 1.0.4
       contact:
         name: Insomnia Airlines API Team
         email: api-support@insomnia-airlines.example
@@ -647,6 +647,7 @@ spec:
               in: query
               description: ISO 3166-1 alpha-2 country code (e.g. `US`, `CA`).
               required: false
+              example: CA
               schema:
                 type: string
                 minLength: 2
@@ -655,6 +656,7 @@ spec:
               in: query
               description: Maximum number of airports to return.
               required: false
+              example: 10
               schema:
                 type: integer
                 format: int32
@@ -670,6 +672,25 @@ spec:
                     type: array
                     items:
                       $ref: "#/components/schemas/Airport"
+                  examples:
+                    northAmerica:
+                      summary: Three served airports
+                      value:
+                        - iataCode: YYZ
+                          name: Toronto Pearson International Airport
+                          city: Toronto
+                          country: CA
+                          timezone: America/Toronto
+                        - iataCode: YVR
+                          name: Vancouver International Airport
+                          city: Vancouver
+                          country: CA
+                          timezone: America/Vancouver
+                        - iataCode: SEA
+                          name: Seattle–Tacoma International Airport
+                          city: Seattle
+                          country: US
+                          timezone: America/Los_Angeles
             default:
               description: Unexpected error.
               content:
@@ -689,6 +710,23 @@ spec:
               application/json:
                 schema:
                   $ref: "#/components/schemas/AirportInput"
+                examples:
+                  montreal:
+                    summary: Add Montréal–Trudeau
+                    value:
+                      iataCode: YUL
+                      name: Montréal–Trudeau International Airport
+                      city: Montréal
+                      country: CA
+                      timezone: America/Montreal
+                  vancouver:
+                    summary: Add Vancouver
+                    value:
+                      iataCode: YVR
+                      name: Vancouver International Airport
+                      city: Vancouver
+                      country: CA
+                      timezone: America/Vancouver
           responses:
             "201":
               description: Airport created.
@@ -696,10 +734,39 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Airport"
+                  examples:
+                    montreal:
+                      summary: Montréal–Trudeau added
+                      value:
+                        iataCode: YUL
+                        name: Montréal–Trudeau International Airport
+                        city: Montréal
+                        country: CA
+                        timezone: America/Montreal
             "400":
               description: Invalid airport payload.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    invalidCountry:
+                      summary: Country code is not 2 letters
+                      value:
+                        code: INVALID_AIRPORT
+                        message: country must be a 2-letter ISO 3166-1 alpha-2 code.
             "409":
               description: An airport with that IATA code already exists.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    duplicate:
+                      summary: IATA code already registered
+                      value:
+                        code: AIRPORT_ALREADY_EXISTS
+                        message: An airport with IATA code 'YUL' already exists.
             default:
               description: Unexpected error.
               content:
@@ -712,6 +779,7 @@ spec:
             in: path
             description: 3-letter IATA airport code (e.g. `YYZ`).
             required: true
+            example: YYZ
             schema:
               type: string
               minLength: 3
@@ -730,8 +798,27 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Airport"
+                  examples:
+                    toronto:
+                      summary: Toronto Pearson
+                      value:
+                        iataCode: YYZ
+                        name: Toronto Pearson International Airport
+                        city: Toronto
+                        country: CA
+                        timezone: America/Toronto
             "404":
               description: Airport not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: Unknown IATA code
+                      value:
+                        code: AIRPORT_NOT_FOUND
+                        message: No airport with IATA code 'XYZ' exists.
             default:
               description: Unexpected error.
               content:
@@ -751,6 +838,15 @@ spec:
               application/json:
                 schema:
                   $ref: "#/components/schemas/AirportInput"
+                examples:
+                  renameTorontoGate:
+                    summary: Update Toronto Pearson
+                    value:
+                      iataCode: YYZ
+                      name: Toronto Pearson International Airport
+                      city: Toronto
+                      country: CA
+                      timezone: America/Toronto
           responses:
             "200":
               description: Airport updated.
@@ -758,10 +854,39 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Airport"
+                  examples:
+                    toronto:
+                      summary: Toronto Pearson updated
+                      value:
+                        iataCode: YYZ
+                        name: Toronto Pearson International Airport
+                        city: Toronto
+                        country: CA
+                        timezone: America/Toronto
             "400":
               description: Invalid payload.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    invalidTimezone:
+                      summary: Timezone is not an IANA name
+                      value:
+                        code: INVALID_AIRPORT
+                        message: timezone must be a valid IANA timezone name.
             "404":
               description: Airport not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: Unknown IATA code
+                      value:
+                        code: AIRPORT_NOT_FOUND
+                        message: No airport with IATA code 'XYZ' exists.
             default:
               description: Unexpected error.
               content:
@@ -780,8 +905,28 @@ spec:
               description: Airport deleted.
             "404":
               description: Airport not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: Unknown IATA code
+                      value:
+                        code: AIRPORT_NOT_FOUND
+                        message: No airport with IATA code 'XYZ' exists.
             "409":
               description: Airport is referenced by one or more active routes.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    hasRoutes:
+                      summary: Airport still has active routes
+                      value:
+                        code: AIRPORT_IN_USE
+                        message: Airport 'YYZ' is referenced by 4 active routes.
             default:
               description: Unexpected error.
               content:
@@ -807,6 +952,7 @@ spec:
               in: query
               description: Filter by origin airport IATA code.
               required: false
+              example: YYZ
               schema:
                 type: string
                 minLength: 3
@@ -816,6 +962,7 @@ spec:
               in: query
               description: Filter by destination airport IATA code.
               required: false
+              example: SFO
               schema:
                 type: string
                 minLength: 3
@@ -830,6 +977,20 @@ spec:
                     type: array
                     items:
                       $ref: "#/components/schemas/Route"
+                  examples:
+                    fromToronto:
+                      summary: Routes published from YYZ
+                      value:
+                        - id: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+                          origin: YYZ
+                          destination: SFO
+                          distanceNauticalMiles: 1850
+                          blockTimeMinutes: 305
+                        - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                          origin: YVR
+                          destination: ORD
+                          distanceNauticalMiles: 1605
+                          blockTimeMinutes: 245
             default:
               description: Unexpected error.
               content:
@@ -849,6 +1010,14 @@ spec:
               application/json:
                 schema:
                   $ref: "#/components/schemas/RouteInput"
+                examples:
+                  vancouverToChicago:
+                    summary: Publish YVR to ORD
+                    value:
+                      origin: YVR
+                      destination: ORD
+                      distanceNauticalMiles: 1605
+                      blockTimeMinutes: 245
           responses:
             "201":
               description: Route published.
@@ -856,11 +1025,40 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Route"
+                  examples:
+                    vancouverToChicago:
+                      summary: YVR to ORD published
+                      value:
+                        id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                        origin: YVR
+                        destination: ORD
+                        distanceNauticalMiles: 1605
+                        blockTimeMinutes: 245
             "400":
               description: Invalid route payload (e.g. unknown airport, identical origin and
                 destination).
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    sameOriginAndDestination:
+                      summary: Origin equals destination
+                      value:
+                        code: INVALID_ROUTE
+                        message: origin and destination must be different airports.
             "409":
               description: Route already exists for that origin–destination pair.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    duplicate:
+                      summary: Route already exists
+                      value:
+                        code: ROUTE_ALREADY_EXISTS
+                        message: A route from YVR to ORD already exists.
             default:
               description: Unexpected error.
               content:
@@ -873,6 +1071,7 @@ spec:
             in: path
             description: Route identifier.
             required: true
+            example: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
             schema:
               type: string
               format: uuid
@@ -889,8 +1088,27 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Route"
+                  examples:
+                    torontoToSanFrancisco:
+                      summary: YYZ to SFO
+                      value:
+                        id: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+                        origin: YYZ
+                        destination: SFO
+                        distanceNauticalMiles: 1850
+                        blockTimeMinutes: 305
             "404":
               description: Route not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: Unknown route ID
+                      value:
+                        code: ROUTE_NOT_FOUND
+                        message: No route with ID 'a8098c1a-f86e-11da-bd1a-00112444be1e' exists.
             default:
               description: Unexpected error.
               content:
@@ -909,8 +1127,28 @@ spec:
               description: Route withdrawn.
             "404":
               description: Route not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: Unknown route ID
+                      value:
+                        code: ROUTE_NOT_FOUND
+                        message: No route with ID 'a8098c1a-f86e-11da-bd1a-00112444be1e' exists.
             "409":
               description: Route is referenced by future flights.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    hasFlights:
+                      summary: Future flights still use the route
+                      value:
+                        code: ROUTE_IN_USE
+                        message: Route is referenced by 12 future flights.
             default:
               description: Unexpected error.
               content:
@@ -935,6 +1173,7 @@ spec:
               in: query
               description: Origin airport IATA code.
               required: false
+              example: YYZ
               schema:
                 type: string
                 minLength: 3
@@ -944,6 +1183,7 @@ spec:
               in: query
               description: Destination airport IATA code.
               required: false
+              example: SFO
               schema:
                 type: string
                 minLength: 3
@@ -953,6 +1193,7 @@ spec:
               in: query
               description: Local departure date at the origin (ISO 8601 `YYYY-MM-DD`).
               required: false
+              example: 2026-05-12
               schema:
                 type: string
                 format: date
@@ -960,12 +1201,14 @@ spec:
               in: query
               description: Filter by flight status.
               required: false
+              example: SCHEDULED
               schema:
                 $ref: "#/components/schemas/FlightStatus"
             - name: limit
               in: query
               description: Maximum number of flights to return.
               required: false
+              example: 10
               schema:
                 type: integer
                 format: int32
@@ -981,6 +1224,26 @@ spec:
                     type: array
                     items:
                       $ref: "#/components/schemas/Flight"
+                  examples:
+                    yyzDepartures:
+                      summary: Departures on 2026-05-12
+                      value:
+                        - flightNumber: IA204
+                          departureDate: 2026-05-12
+                          routeId: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+                          aircraftTailNumber: C-FINS
+                          scheduledDeparture: 2026-05-12T13:30:00Z
+                          scheduledArrival: 2026-05-12T18:35:00Z
+                          gate: D32
+                          status: SCHEDULED
+                        - flightNumber: IA318
+                          departureDate: 2026-05-12
+                          routeId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                          aircraftTailNumber: C-GZZZ
+                          scheduledDeparture: 2026-05-12T15:00:00Z
+                          scheduledArrival: 2026-05-12T19:05:00Z
+                          gate: B14
+                          status: BOARDING
             default:
               description: Unexpected error.
               content:
@@ -1001,6 +1264,17 @@ spec:
               application/json:
                 schema:
                   $ref: "#/components/schemas/FlightInput"
+                examples:
+                  overnightFlight:
+                    summary: Schedule IA918
+                    value:
+                      flightNumber: IA918
+                      departureDate: 2026-05-12
+                      routeId: a8098c1a-f86e-11da-bd1a-00112444be1e
+                      aircraftTailNumber: C-GZZZ
+                      scheduledDeparture: 2026-05-12T22:00:00Z
+                      scheduledArrival: 2026-05-13T05:45:00Z
+                      gate: B14
           responses:
             "201":
               description: Flight scheduled.
@@ -1008,11 +1282,43 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Flight"
+                  examples:
+                    overnightFlight:
+                      summary: IA918 scheduled
+                      value:
+                        flightNumber: IA918
+                        departureDate: 2026-05-12
+                        routeId: a8098c1a-f86e-11da-bd1a-00112444be1e
+                        aircraftTailNumber: C-GZZZ
+                        scheduledDeparture: 2026-05-12T22:00:00Z
+                        scheduledArrival: 2026-05-13T05:45:00Z
+                        gate: B14
+                        status: SCHEDULED
             "400":
               description: Invalid flight payload (e.g. unknown route or aircraft, scheduling
                 conflict).
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    unknownAircraft:
+                      summary: Aircraft is not in the fleet
+                      value:
+                        code: INVALID_FLIGHT
+                        message: No aircraft with tail number 'C-XXXX' exists.
             "409":
               description: Flight number already in use for that departure date.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    duplicate:
+                      summary: Flight number already used that day
+                      value:
+                        code: FLIGHT_ALREADY_EXISTS
+                        message: Flight IA918 is already scheduled for 2026-05-12.
             default:
               description: Unexpected error.
               content:
@@ -1025,6 +1331,7 @@ spec:
             in: path
             description: Insomnia Airlines flight number (e.g. `IA123`).
             required: true
+            example: IA204
             schema:
               type: string
               pattern: ^IA[0-9]{1,4}$
@@ -1036,6 +1343,7 @@ spec:
 
               disambiguate when the same flight number recurs on multiple days.
             required: true
+            example: 2026-05-12
             schema:
               type: string
               format: date
@@ -1053,8 +1361,41 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Flight"
+                  examples:
+                    onTime:
+                      summary: Scheduled flight
+                      value:
+                        flightNumber: IA204
+                        departureDate: 2026-05-12
+                        routeId: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+                        aircraftTailNumber: C-FINS
+                        scheduledDeparture: 2026-05-12T13:30:00Z
+                        scheduledArrival: 2026-05-12T18:35:00Z
+                        gate: D32
+                        status: SCHEDULED
+                    delayed:
+                      summary: Delayed flight
+                      value:
+                        flightNumber: IA204
+                        departureDate: 2026-05-12
+                        routeId: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+                        aircraftTailNumber: C-FINS
+                        scheduledDeparture: 2026-05-12T14:15:00Z
+                        scheduledArrival: 2026-05-12T19:20:00Z
+                        gate: D32
+                        status: DELAYED
             "404":
               description: Flight not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: No such flight on that date
+                      value:
+                        code: FLIGHT_NOT_FOUND
+                        message: No flight IA204 departs on 2026-05-13.
             default:
               description: Unexpected error.
               content:
@@ -1080,6 +1421,17 @@ spec:
               application/json:
                 schema:
                   $ref: "#/components/schemas/FlightPatch"
+                examples:
+                  delay:
+                    summary: Mark delayed and push departure
+                    value:
+                      scheduledDeparture: 2026-05-12T14:15:00Z
+                      scheduledArrival: 2026-05-12T19:20:00Z
+                      status: DELAYED
+                  gateChange:
+                    summary: Reassign gate
+                    value:
+                      gate: D40
           responses:
             "200":
               description: Flight updated.
@@ -1087,10 +1439,43 @@ spec:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/Flight"
+                  examples:
+                    delayed:
+                      summary: Flight marked delayed
+                      value:
+                        flightNumber: IA204
+                        departureDate: 2026-05-12
+                        routeId: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+                        aircraftTailNumber: C-FINS
+                        scheduledDeparture: 2026-05-12T14:15:00Z
+                        scheduledArrival: 2026-05-12T19:20:00Z
+                        gate: D32
+                        status: DELAYED
             "400":
               description: Invalid patch payload.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    invalidStatus:
+                      summary: Unknown status value
+                      value:
+                        code: INVALID_PATCH
+                        message: status must be one of SCHEDULED, BOARDING, DEPARTED, ARRIVED, DELAYED,
+                          CANCELLED.
             "404":
               description: Flight not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: No such flight on that date
+                      value:
+                        code: FLIGHT_NOT_FOUND
+                        message: No flight IA204 departs on 2026-05-13.
             default:
               description: Unexpected error.
               content:
@@ -1109,6 +1494,16 @@ spec:
               description: Flight cancelled.
             "404":
               description: Flight not found.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+                  examples:
+                    notFound:
+                      summary: No such flight on that date
+                      value:
+                        code: FLIGHT_NOT_FOUND
+                        message: No flight IA204 departs on 2026-05-13.
             default:
               description: Unexpected error.
               content:
